@@ -1,0 +1,26 @@
+{
+  "name": "profinance",
+  "version": "1.0.0",
+  "description": "Sistema de controle financeiro desktop (Electron + Tailwind)",
+  "main": "main.js",
+  "scripts": {
+    "start": "concurrently \"npm run dev:css\" \"npm run dev:server\" \"electron .\"",
+    "dev:css": "npx tailwindcss -i ./renderer/styles.css -o ./renderer/output.css --watch",
+    "dev:server": "node src/server.js"
+  },
+  "author": "Ricardo Goulart",
+  "license": "MIT",
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "electron": "^29.4.6",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "concurrently": "^9.2.1",
+    "dotenv": "^17.2.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
