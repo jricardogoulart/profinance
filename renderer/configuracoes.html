@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurações | ProFinance</title>
+<link rel="stylesheet" href="output.css">
+
+</head>
+<body>
+<!-- 🔹 Navbar Global -->
+<nav class="bg-gray-900 shadow-lg px-6 py-3 flex items-center justify-between">
+  
+  <!-- 🔹 Logo -->
+  <div class="flex items-center space-x-3">
+    <img src="assets/profinance.svg" alt="ProFinance">
+  </div>
+
+  <!-- 🔹 Links de Navegação -->
+  <div class="hidden md:flex space-x-6">
+    <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
+    <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
+    <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
+    <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
+    <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
+  </div>
+
+  <!-- 🔹 Botão Menu Mobile -->
+  <div class="md:hidden">
+    <button id="menu-btn" class="text-white focus:outline-none">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2"
+        viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M4 6h16M4 12h16m-7 6h7"></path>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<!-- 🔹 Menu Mobile -->
+<div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
+  <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
+  <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
+  <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
+  <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
+  <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
+</div>
+
+<script>
+  // Toggle Menu Mobile
+  const menuBtn = document.getElementById("menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  menuBtn.addEventListener("click", () => {
+    mobileMenu.classList.toggle("hidden");
+  });
+</script>
+
+
+
+<div class="container">
+<h1 class="text-2xl font-bold mb-6">Configurações do Sistema</h1>
+
+
+<div class="card mb-6">
+<h2 class="text-lg font-semibold mb-2">Preferências</h2>
+<label class="flex items-center gap-2">
+<input type="checkbox" id="toggle-tema" class="form-checkbox">
+<span>Tema Escuro</span>
+</label>
+</div>
+
+
+<div class="card mb-6">
+<h2 class="text-lg font-semibold mb-2">Backup e Restauração</h2>
+<button class="button-primary mr-4">Fazer Backup</button>
+<button class="button-danger">Restaurar Backup</button>
+</div>
+
+
+<div class="card">
+<h2 class="text-lg font-semibold mb-2">Sobre o Sistema</h2>
+<p>ProFinance v1.0</p>
+<p>Desenvolvido por Ricardo Goulart</p>
+</html>

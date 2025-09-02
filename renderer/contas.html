@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contas Bancárias | ProFinance</title>
+<link rel="stylesheet" href="output.css">
+</head>
+<body>
+<!-- 🔹 Navbar Global -->
+<nav class="bg-gray-900 shadow-lg px-6 py-3 flex items-center justify-between">
+  
+  <!-- 🔹 Logo -->
+  <div class="flex items-center space-x-3">
+    <img src="assets/profinance.svg" alt="ProFinance">
+  </div>
+
+  <!-- 🔹 Links de Navegação -->
+  <div class="hidden md:flex space-x-6">
+    <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
+    <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
+    <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
+    <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
+    <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
+  </div>
+
+  <!-- 🔹 Botão Menu Mobile -->
+  <div class="md:hidden">
+    <button id="menu-btn" class="text-white focus:outline-none">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2"
+        viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M4 6h16M4 12h16m-7 6h7"></path>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<!-- 🔹 Menu Mobile -->
+<div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
+  <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
+  <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
+  <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
+  <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
+  <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
+</div>
+
+<script>
+  // Toggle Menu Mobile
+  const menuBtn = document.getElementById("menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  menuBtn.addEventListener("click", () => {
+    mobileMenu.classList.toggle("hidden");
+  });
+</script>
+
+
+
+<div class="container">
+<h1 class="text-2xl font-bold mb-6">Cadastro de Contas Bancárias</h1>
+
+
+<!-- Formulário -->
+<div class="card">
+<form id="form-conta" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<input class="border rounded-lg p-2" type="text" placeholder="Nome da Conta" required>
+<input class="border rounded-lg p-2" type="text" placeholder="Banco" required>
+<input class="border rounded-lg p-2" type="text" placeholder="Agência" required>
+<input class="border rounded-lg p-2" type="text" placeholder="Número da Conta" required>
+<input class="border rounded-lg p-2" type="number" placeholder="Saldo Inicial" required>
+<button class="button-primary col-span-full">Salvar Conta</button>
+</form>
+</div>
+
+
+<!-- Lista de Contas -->
+<div class="card mt-6">
+<h2 class="text-lg font-semibold mb-4">Contas Cadastradas</h2>
+<table class="table">
+<thead>
+<tr>
+<th>Nome</th>
+<th>Banco</th>
+<th>Agência</th>
+<th>Número</th>
+<th>Saldo</th>
+<th>Ações</th>
+</tr>
+</thead>
+<tbody id="tabela-contas">
+<!-- Linhas dinâmicas -->
+</tbody>
+</table>
+</div>
+</div>
+</body>
+</html>

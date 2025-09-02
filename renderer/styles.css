@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* Customizações globais */
+body {
+@apply bg-gray-50 text-gray-800 font-sans;
+}
+
+
+.navbar {
+@apply flex items-center justify-between bg-white shadow-md p-4 fixed top-0 left-0 w-full z-50;
+}
+
+
+.navbar-logo {
+@apply flex items-center gap-2;
+}
+
+
+.navbar-logo img {
+  width: 2rem !important; /* 128px */
+  height: auto !important;
+  object-fit: contain !important;
+}
+  
+
+
+.navbar-links {
+@apply flex space-x-6;
+}
+
+
+.navbar-links a {
+@apply text-gray-600 hover:text-blue-600 font-medium transition;
+}
+
+
+.container {
+@apply max-w-7xl mx-auto p-6 mt-20;
+}
+
+
+.card {
+@apply bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition;
+}
+
+
+.table {
+@apply w-full border-collapse bg-white rounded-xl shadow-md overflow-hidden;
+}
+
+
+.table th {
+@apply bg-gray-100 text-gray-700 text-left px-4 py-3;
+}
+
+
+.table td {
+@apply px-4 py-3 border-t;
+}
+
+
+.button-primary {
+@apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition;
+}
+
+
+.button-danger {
+@apply bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition;
+}
+
+
+/* Badge para tipo de transação */
+.badge-credit {
+@apply bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+
+.badge-debit {
+@apply bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium;
+}
