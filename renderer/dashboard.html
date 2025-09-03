@@ -5,11 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dashboard | ProFinance</title>
 <link rel="stylesheet" href="output.css">
+<script src="theme.js" defer></script>
+
 </head>
-<body>
+<body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
 <!-- Navbar -->
 <!-- 🔹 Navbar Global -->
-<nav class="bg-gray-900 shadow-lg px-6 py-3 flex items-center justify-between">
+<nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+
   
   <!-- 🔹 Logo -->
   <div class="flex items-center space-x-3">
@@ -54,6 +57,56 @@
   menuBtn.addEventListener("click", () => {
     mobileMenu.classList.toggle("hidden");
   });
+</script>
+
+<script>
+  async function carregarContas() {
+    const contas = await window.profinanceAPI.listarContas();
+    console.log("Contas:", contas);
+  }
+
+  document.addEventListener("DOMContentLoaded", carregarContas);
+</script>
+
+<script>
+  const cardsContainer = document.getElementById("cards-contas");
+
+  async function carregarContas() {
+    const contas = await window.profinanceAPI.listarContas();
+
+    // Se não houver contas cadastradas
+    if (contas.length === 0) {
+      cardsContainer.innerHTML = `
+        <div class="col-span-full text-center text-gray-500 dark:text-gray-400">
+          Nenhuma conta cadastrada. Vá até <b>Contas</b> e cadastre uma.
+        </div>
+      `;
+      return;
+    }
+
+    // Renderiza os cards das contas
+    cardsContainer.innerHTML = contas.map(conta => `
+      <div class="card shadow-md hover:shadow-lg transition">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">${conta.nome}</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-300">${conta.banco}</p>
+        <p class="mt-2 text-blue-600 dark:text-blue-400 font-bold">
+          Saldo inicial: R$ ${Number(conta.saldo_inicial).toFixed(2)}
+        </p>
+        <button
+          onclick="verTransacoes(${conta.id})"
+          class="mt-4 button-primary w-full"
+        >
+          Ver Transações
+        </button>
+      </div>
+    `).join("");
+  }
+
+  function verTransacoes(contaId) {
+    window.location.href = `transacoes.html?conta=${contaId}`;
+  }
+
+  document.addEventListener("DOMContentLoaded", carregarContas);
 </script>
 
 

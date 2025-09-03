@@ -1,44 +1,98 @@
 const express = require("express");
 const cors = require("cors");
-const db = require("./database");
+const bodyParser = require("body-parser");
+const contasModel = require("./models/contasModel");
+const transacoesModel = require("./models/transacoesModel");
 
 const app = express();
+const PORT = 3001;
+
+// Middlewares
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// Rotas de Contas
+// =========================
+// ROTAS DE CONTAS
+// =========================
+
+// Listar todas as contas
 app.get("/contas", (req, res) => {
-  const contas = db.prepare("SELECT * FROM contas").all();
-  res.json(contas);
+  try {
+    const contas = contasModel.listar();
+    res.json(contas);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar contas" });
+  }
 });
 
+// Criar conta
 app.post("/contas", (req, res) => {
-  const { nome, banco, agencia, numero, saldo_inicial } = req.body;
-  const stmt = db.prepare(`
-    INSERT INTO contas (nome, banco, agencia, numero, saldo_inicial)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-  const result = stmt.run(nome, banco, agencia, numero, saldo_inicial);
-  res.json({ id: result.lastInsertRowid });
+  try {
+    const result = contasModel.criar(req.body);
+    res.json({ message: "Conta criada com sucesso", id: result.lastInsertRowid });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao criar conta" });
+  }
 });
 
-// Rotas de Transações
-app.get("/transacoes/:conta_id", (req, res) => {
-  const { conta_id } = req.params;
-  const transacoes = db.prepare(`
-    SELECT * FROM transacoes WHERE conta_id = ?
-  `).all(conta_id);
-  res.json(transacoes);
+// Atualizar conta
+app.put("/contas/:id", (req, res) => {
+  try {
+    contasModel.atualizar(req.params.id, req.body);
+    res.json({ message: "Conta atualizada com sucesso" });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao atualizar conta" });
+  }
 });
 
+// Excluir conta
+app.delete("/contas/:id", (req, res) => {
+  try {
+    contasModel.excluir(req.params.id);
+    res.json({ message: "Conta excluída com sucesso" });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao excluir conta" });
+  }
+});
+
+// =========================
+// ROTAS DE TRANSAÇÕES
+// =========================
+
+// Listar transações de uma conta
+app.get("/transacoes/:contaId", (req, res) => {
+  try {
+    const transacoes = transacoesModel.listarPorConta(req.params.contaId);
+    res.json(transacoes);
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao buscar transações" });
+  }
+});
+
+// Criar transação
 app.post("/transacoes", (req, res) => {
-  const { conta_id, titulo, data, valor, tipo } = req.body;
-  const stmt = db.prepare(`
-    INSERT INTO transacoes (conta_id, titulo, data, valor, tipo)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-  const result = stmt.run(conta_id, titulo, data, valor, tipo);
-  res.json({ id: result.lastInsertRowid });
+  try {
+    const result = transacoesModel.criar(req.body);
+    res.json({ message: "Transação criada com sucesso", id: result.lastInsertRowid });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao criar transação" });
+  }
 });
 
-app.listen(3000, () => console.log("Servidor rodando na porta 3000 🚀"));
+// Excluir transação
+app.delete("/transacoes/:id", (req, res) => {
+  try {
+    transacoesModel.excluir(req.params.id);
+    res.json({ message: "Transação excluída com sucesso" });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao excluir transação" });
+  }
+});
+
+// =========================
+// INICIAR SERVIDOR
+// =========================
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+});

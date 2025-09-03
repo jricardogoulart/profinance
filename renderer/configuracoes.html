@@ -5,11 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configurações | ProFinance</title>
 <link rel="stylesheet" href="output.css">
+<script src="theme.js" defer></script>
 
 </head>
-<body>
+<body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
 <!-- 🔹 Navbar Global -->
-<nav class="bg-gray-900 shadow-lg px-6 py-3 flex items-center justify-between">
+<nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+
   
   <!-- 🔹 Logo -->
   <div class="flex items-center space-x-3">
@@ -55,7 +57,35 @@
     mobileMenu.classList.toggle("hidden");
   });
 </script>
+<script>
+  const toggleTema = document.getElementById("toggle-tema");
 
+  // Carrega o estado salvo
+  if (localStorage.getItem("theme") === "dark") {
+    document.documentElement.classList.add("dark");
+    toggleTema.checked = true;
+  }
+
+  toggleTema.addEventListener("change", () => {
+    if (toggleTema.checked) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  });
+</script>
+
+
+<script>
+  async function carregarContas() {
+    const contas = await window.profinanceAPI.listarContas();
+    console.log("Contas:", contas);
+  }
+
+  document.addEventListener("DOMContentLoaded", carregarContas);
+</script>
 
 
 <div class="container">
@@ -65,9 +95,10 @@
 <div class="card mb-6">
 <h2 class="text-lg font-semibold mb-2">Preferências</h2>
 <label class="flex items-center gap-2">
-<input type="checkbox" id="toggle-tema" class="form-checkbox">
-<span>Tema Escuro</span>
+  <input type="checkbox" id="toggle-tema" class="form-checkbox">
+  <span>Tema Escuro</span>
 </label>
+
 </div>
 
 

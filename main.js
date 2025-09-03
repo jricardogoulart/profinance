@@ -1,27 +1,25 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
-const { spawn } = require("child_process");
-
-let win;
 
 function createWindow() {
-  win = new BrowserWindow({
-    width: 1280,
+  const win = new BrowserWindow({
+    width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-    },
+      preload: path.join(__dirname, "src", "preload.js"), // <-- AQUI
+      nodeIntegration: false,
+      contextIsolation: true
+    }
   });
 
-  win.loadFile("renderer/dashboard.html");
-
+  win.loadFile(path.join(__dirname, "renderer", "dashboard.html"));
 }
 
-// Inicia o servidor Express junto com o Electron
 app.whenReady().then(() => {
-  spawn("node", ["src/server.js"], { stdio: "inherit" });
   createWindow();
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
 });
 
 app.on("window-all-closed", () => {
