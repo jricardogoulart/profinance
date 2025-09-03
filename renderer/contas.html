@@ -1,23 +1,39 @@
 <!DOCTYPE html>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Contas Bancárias | ProFinance</title>
-<link rel="stylesheet" href="output.css">
-<script src="theme.js" defer></script>
-
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contas Bancárias | ProFinance</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <link rel="stylesheet" href="output.css">
+  <script src="theme.js" defer></script>
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
-<!-- 🔹 Navbar Global -->
-<nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+  <!-- 🔹 Navbar Global -->
+  <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <img src="assets/profinance.svg" alt="ProFinance">
+    </div>
 
-  
-  <!-- 🔹 Logo -->
-  <div class="flex items-center space-x-3">
-    <img src="assets/profinance.svg" alt="ProFinance">
-  </div>
+    <div class="hidden md:flex space-x-6">
+      <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
+      <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
+      <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
+      <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
+      <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
+    </div>
 
-  <!-- 🔹 Links de Navegação -->
-  <div class="hidden md:flex space-x-6">
+    <div class="md:hidden">
+      <button id="menu-btn" class="text-white focus:outline-none">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 🔹 Menu Mobile -->
+  <div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
     <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
     <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
     <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
@@ -25,151 +41,137 @@
     <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
   </div>
 
-  <!-- 🔹 Botão Menu Mobile -->
-  <div class="md:hidden">
-    <button id="menu-btn" class="text-white focus:outline-none">
-      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2"
-        viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M4 6h16M4 12h16m-7 6h7"></path>
-      </svg>
-    </button>
-  </div>
-</nav>
+  <main class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-6">Cadastro de Contas Bancárias</h1>
 
-<!-- 🔹 Menu Mobile -->
-<div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
-  <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
-  <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
-  <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
-  <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
-  <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
-</div>
+    <!-- Formulário -->
+    <div class="card mb-6 p-4 rounded shadow">
+      <form id="form-conta" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input id="nome" name="nome" type="text" placeholder="Nome da Conta" required class="border rounded-lg p-2">
+        <input id="banco" name="banco" type="text" placeholder="Banco" required class="border rounded-lg p-2">
+        <input id="agencia" name="agencia" type="text" placeholder="Agência" class="border rounded-lg p-2">
+        <input id="numero" name="numero" type="text" placeholder="Número da Conta" class="border rounded-lg p-2">
+        <input id="saldo" name="saldo" type="number" placeholder="Saldo Inicial" step="0.01" class="border rounded-lg p-2">
+        <button class="button-primary col-span-full">Salvar Conta</button>
+      </form>
+    </div>
 
-<script>
-  // Toggle Menu Mobile
-  const menuBtn = document.getElementById("menu-btn");
-  const mobileMenu = document.getElementById("mobile-menu");
+    <!-- Lista de Contas -->
+    <div class="card p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-4">Contas Cadastradas</h2>
+      <div class="overflow-x-auto">
+        <table class="table w-full">
+          <thead>
+            <tr>
+              <th class="text-left">Nome</th>
+              <th class="text-left">Banco</th>
+              <th class="text-left">Agência</th>
+              <th class="text-left">Número</th>
+              <th class="text-right">Saldo Inicial</th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-contas">
+            <!-- Linhas dinâmicas -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
 
-  menuBtn.addEventListener("click", () => {
-    mobileMenu.classList.toggle("hidden");
-  });
-</script>
-<script>
-  async function carregarContas() {
-    const contas = await window.profinanceAPI.listarContas();
-    console.log("Contas:", contas);
-  }
+  <!-- Scripts no final para garantir DOM pronto -->
+  <script>
+    // Toggle Menu Mobile
+    (function () {
+      const menuBtn = document.getElementById('menu-btn');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+      }
+    })();
 
-  document.addEventListener("DOMContentLoaded", carregarContas);
-</script>
+    const form = document.getElementById('form-conta');
+    const tabela = document.getElementById('tabela-contas');
 
-
-
-
-<div class="container">
-<h1 class="text-2xl font-bold mb-6">Cadastro de Contas Bancárias</h1>
-
-
-<!-- Formulário -->
-<div class="card mb-6">
-  <form id="form-conta" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <input id="nome" type="text" placeholder="Nome da Conta" required class="border rounded-lg p-2">
-    <input id="banco" type="text" placeholder="Banco" required class="border rounded-lg p-2">
-    <input id="agencia" type="text" placeholder="Agência" class="border rounded-lg p-2">
-    <input id="numero" type="text" placeholder="Número da Conta" class="border rounded-lg p-2">
-    <input id="saldo" type="number" placeholder="Saldo Inicial" step="0.01" class="border rounded-lg p-2">
-    <button class="button-primary col-span-full">Salvar Conta</button>
-  </form>
-</div>
-
-
-<!-- Lista de Contas -->
-<!-- Lista de Contas -->
-<div class="card">
-  <h2 class="text-lg font-semibold mb-4">Contas Cadastradas</h2>
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>Banco</th>
-        <th>Agência</th>
-        <th>Número</th>
-        <th>Saldo Inicial</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody id="tabela-contas">
-      <!-- Linhas dinâmicas -->
-    </tbody>
-  </table>
-</div>
-</div>
-<script>
-  const formConta = document.getElementById("form-conta");
-  const tabelaContas = document.getElementById("tabela-contas");
-
-  // Função para carregar contas existentes
-  async function carregarContas() {
-    const contas = await window.profinanceAPI.listarContas();
-
-    if (contas.length === 0) {
-      tabelaContas.innerHTML = `
-        <tr>
-          <td colspan="6" class="text-center text-gray-500 dark:text-gray-400 py-3">
-            Nenhuma conta cadastrada.
-          </td>
-        </tr>`;
-      return;
+    function formatBRL(valor) {
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor || 0));
     }
 
-    tabelaContas.innerHTML = contas.map(conta => `
-      <tr class="border-b border-gray-200 dark:border-gray-700">
-        <td class="px-4 py-3">${conta.nome}</td>
-        <td class="px-4 py-3">${conta.banco}</td>
-        <td class="px-4 py-3">${conta.agencia || "-"}</td>
-        <td class="px-4 py-3">${conta.numero || "-"}</td>
-        <td class="px-4 py-3 text-blue-600 dark:text-blue-400 font-bold">
-          R$ ${Number(conta.saldo_inicial).toFixed(2)}
-        </td>
-        <td class="px-4 py-3 text-center">
-          <button
-            onclick="excluirConta(${conta.id})"
-            class="button-danger px-3 py-1 rounded"
-          >
-            Excluir
-          </button>
-        </td>
-      </tr>
-    `).join("");
-  }
+    async function carregarContas() {
+      try {
+        if (!window.profinanceAPI || typeof window.profinanceAPI.listarContas !== 'function') {
+          tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">API não disponível. Verifique o preload.</td></tr>';
+          return;
+        }
 
-  // Função para criar conta
-  formConta?.addEventListener("submit", async (e) => {
-    e.preventDefault();
+        const contas = await window.profinanceAPI.listarContas();
 
-    const novaConta = {
-      nome: document.getElementById("nome").value,
-      banco: document.getElementById("banco").value,
-      agencia: document.getElementById("agencia").value,
-      numero: document.getElementById("numero").value,
-      saldo_inicial: parseFloat(document.getElementById("saldo").value) || 0
-    };
+        if (!contas || contas.length === 0) {
+          tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma conta cadastrada.</td></tr>';
+          return;
+        }
 
-    await window.profinanceAPI.criarConta(novaConta);
-    formConta.reset();
-    await carregarContas();
-  });
+        tabela.innerHTML = contas.map(c => `
+          <tr>
+            <td>${c.nome}</td>
+            <td>${c.banco || ''}</td>
+            <td>${c.agencia || ''}</td>
+            <td>${c.numero || ''}</td>
+            <td class="text-right">${formatBRL(c.saldo)}</td>
+            <td class="text-center">
+              <button onclick="excluirConta(${c.id})" class="bg-red-500 text-white px-3 py-1 rounded">Excluir</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Erro ao carregar contas:', err);
+        tabela.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar contas.</td></tr>';
+      }
+    }
 
-  // Função para excluir conta
-  async function excluirConta(id) {
-    if (!confirm("Tem certeza que deseja excluir esta conta?")) return;
-    await window.profinanceAPI.excluirConta(id);
-    await carregarContas();
-  }
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        if (!window.profinanceAPI || typeof window.profinanceAPI.cadastrarConta !== 'function') {
+          alert('API não disponível. Verifique o preload.');
+          return;
+        }
 
-  document.addEventListener("DOMContentLoaded", carregarContas);
-</script>
+        const conta = {
+          nome: form.nome.value.trim(),
+          banco: form.banco.value.trim(),
+          agencia: form.agencia.value.trim(),
+          numero: form.numero.value.trim(),
+          saldo: parseFloat(form.saldo.value) || 0,
+        };
 
+        await window.profinanceAPI.cadastrarConta(conta);
+        form.reset();
+        await carregarContas();
+      } catch (err) {
+        console.error('Erro ao adicionar conta:', err);
+        alert('Não foi possível salvar a conta.');
+      }
+    });
+
+    async function excluirConta(id) {
+      try {
+        if (!window.profinanceAPI || typeof window.profinanceAPI.excluirConta !== 'function') {
+          alert('API não disponível. Verifique o preload.');
+          return;
+        }
+        await window.profinanceAPI.excluirConta(id);
+        await carregarContas();
+      } catch (err) {
+        console.error('Erro ao excluir conta:', err);
+        alert('Não foi possível excluir a conta.');
+      }
+    }
+
+    // Deixa excluirConta acessível no escopo global para funcionar no onclick
+    window.excluirConta = excluirConta;
+
+    document.addEventListener('DOMContentLoaded', carregarContas);
+  </script>
 </body>
 </html>

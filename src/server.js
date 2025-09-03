@@ -1,98 +1,29 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const contasModel = require("./models/contasModel");
-const transacoesModel = require("./models/transacoesModel");
+const path = require("path");
+const Database = require("better-sqlite3");
 
-const app = express();
-const PORT = 3001;
+// Conexão com o banco SQLite
+const db = new Database(path.join(__dirname, "../profinance.db"));
 
-// Middlewares
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Criação das tabelas se não existirem
+db.exec(`
+  CREATE TABLE IF NOT EXISTS contas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    banco TEXT NOT NULL,
+    numero TEXT NOT NULL,
+    saldo_inicial REAL DEFAULT 0
+  );
 
-// =========================
-// ROTAS DE CONTAS
-// =========================
+  CREATE TABLE IF NOT EXISTS transacoes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conta_id INTEGER NOT NULL,
+    titulo TEXT NOT NULL,
+    data TEXT DEFAULT CURRENT_DATE,
+    valor REAL NOT NULL,
+    tipo TEXT CHECK(tipo IN ('credito', 'debito')) NOT NULL,
+    descricao TEXT,
+    FOREIGN KEY(conta_id) REFERENCES contas(id) ON DELETE CASCADE
+  );
+`);
 
-// Listar todas as contas
-app.get("/contas", (req, res) => {
-  try {
-    const contas = contasModel.listar();
-    res.json(contas);
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar contas" });
-  }
-});
-
-// Criar conta
-app.post("/contas", (req, res) => {
-  try {
-    const result = contasModel.criar(req.body);
-    res.json({ message: "Conta criada com sucesso", id: result.lastInsertRowid });
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao criar conta" });
-  }
-});
-
-// Atualizar conta
-app.put("/contas/:id", (req, res) => {
-  try {
-    contasModel.atualizar(req.params.id, req.body);
-    res.json({ message: "Conta atualizada com sucesso" });
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao atualizar conta" });
-  }
-});
-
-// Excluir conta
-app.delete("/contas/:id", (req, res) => {
-  try {
-    contasModel.excluir(req.params.id);
-    res.json({ message: "Conta excluída com sucesso" });
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao excluir conta" });
-  }
-});
-
-// =========================
-// ROTAS DE TRANSAÇÕES
-// =========================
-
-// Listar transações de uma conta
-app.get("/transacoes/:contaId", (req, res) => {
-  try {
-    const transacoes = transacoesModel.listarPorConta(req.params.contaId);
-    res.json(transacoes);
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar transações" });
-  }
-});
-
-// Criar transação
-app.post("/transacoes", (req, res) => {
-  try {
-    const result = transacoesModel.criar(req.body);
-    res.json({ message: "Transação criada com sucesso", id: result.lastInsertRowid });
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao criar transação" });
-  }
-});
-
-// Excluir transação
-app.delete("/transacoes/:id", (req, res) => {
-  try {
-    transacoesModel.excluir(req.params.id);
-    res.json({ message: "Transação excluída com sucesso" });
-  } catch (error) {
-    res.status(500).json({ error: "Erro ao excluir transação" });
-  }
-});
-
-// =========================
-// INICIAR SERVIDOR
-// =========================
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-});
+module.exports = db;

@@ -21,11 +21,13 @@ db.prepare(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     conta_id INTEGER NOT NULL,
     titulo TEXT NOT NULL,
-    data TEXT NOT NULL,
     valor REAL NOT NULL,
     tipo TEXT CHECK(tipo IN ('credito','debito')) NOT NULL,
-    FOREIGN KEY(conta_id) REFERENCES contas(id)
+    data TEXT NOT NULL,
+    descricao TEXT,
+    FOREIGN KEY (conta_id) REFERENCES contas(id) ON DELETE CASCADE
   )
 `).run();
+
 
 module.exports = db;

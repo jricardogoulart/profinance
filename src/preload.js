@@ -1,64 +1,23 @@
-const { contextBridge } = require("electron");
-
-const API_URL = "http://localhost:3001"; // Nosso backend local
+// preload.js
+const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("profinanceAPI", {
-  // ========================
-  // CONTAS
-  // ========================
+  // Contas
+  listarContas: () => ipcRenderer.invoke("get-contas"),
+  cadastrarConta: (conta) => ipcRenderer.invoke("add-conta", conta),
+  excluirConta: (id) => ipcRenderer.invoke("delete-conta", id),
 
-  listarContas: async () => {
-    const res = await fetch(`${API_URL}/contas`);
-    return res.json();
-  },
+  // Transações
+  listarMovimentacoes: (contaId) => ipcRenderer.invoke("get-transacoes", contaId),
+  addTransacao: (transacao) => ipcRenderer.invoke("add-transacao", transacao),
 
-  criarConta: async (dados) => {
-    const res = await fetch(`${API_URL}/contas`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dados)
-    });
-    return res.json();
-  },
-
-  atualizarConta: async (id, dados) => {
-    const res = await fetch(`${API_URL}/contas/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dados)
-    });
-    return res.json();
-  },
-
-  excluirConta: async (id) => {
-    const res = await fetch(`${API_URL}/contas/${id}`, {
-      method: "DELETE"
-    });
-    return res.json();
-  },
-
-  // ========================
-  // TRANSAÇÕES
-  // ========================
-
-  listarTransacoes: async (contaId) => {
-    const res = await fetch(`${API_URL}/transacoes/${contaId}`);
-    return res.json();
-  },
-
-  criarTransacao: async (dados) => {
-    const res = await fetch(`${API_URL}/transacoes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dados)
-    });
-    return res.json();
-  },
-
-  excluirTransacao: async (id) => {
-    const res = await fetch(`${API_URL}/transacoes/${id}`, {
-      method: "DELETE"
-    });
-    return res.json();
+  // Eventos em tempo real (opcional)
+  onContasAtualizadas: (callback) => {
+    ipcRenderer.on("contas-atualizadas", callback);
   }
+});
+
+contextBridge.exposeInMainWorld("config", {
+  getConfig: () => ipcRenderer.invoke("get-config"),
+  setConfig: (config) => ipcRenderer.invoke("set-config", config),
 });

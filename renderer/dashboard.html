@@ -1,26 +1,39 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Dashboard | ProFinance</title>
-<link rel="stylesheet" href="output.css">
-<script src="theme.js" defer></script>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | ProFinance</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <link rel="stylesheet" href="output.css">
+  <script src="theme.js" defer></script>
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
-<!-- Navbar -->
-<!-- 🔹 Navbar Global -->
-<nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+  <!-- Navbar -->
+  <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <img src="assets/profinance.svg" alt="ProFinance" />
+    </div>
 
-  
-  <!-- 🔹 Logo -->
-  <div class="flex items-center space-x-3">
-    <img src="assets/profinance.svg" alt="ProFinance">
-  </div>
+    <div class="hidden md:flex space-x-6">
+      <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
+      <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
+      <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
+      <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
+      <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
+    </div>
 
-  <!-- 🔹 Links de Navegação -->
-  <div class="hidden md:flex space-x-6">
+    <div class="md:hidden">
+      <button id="menu-btn" class="text-white focus:outline-none">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
     <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
     <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
     <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
@@ -28,116 +41,145 @@
     <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
   </div>
 
-  <!-- 🔹 Botão Menu Mobile -->
-  <div class="md:hidden">
-    <button id="menu-btn" class="text-white focus:outline-none">
-      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2"
-        viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M4 6h16M4 12h16m-7 6h7"></path>
-      </svg>
-    </button>
-  </div>
-</nav>
+  <main class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-6">Dashboard Financeiro</h1>
 
-<!-- 🔹 Menu Mobile -->
-<div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
-  <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
-  <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
-  <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
-  <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
-  <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
-</div>
+    <!-- Cards das Contas -->
+    <div id="cards-contas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Cards gerados dinamicamente -->
+    </div>
 
-<script>
-  // Toggle Menu Mobile
-  const menuBtn = document.getElementById("menu-btn");
-  const mobileMenu = document.getElementById("mobile-menu");
+    <!-- Saldo Consolidado -->
+    <div class="card mt-6 p-4 rounded shadow">
+      <h2 class="text-lg font-semibold">Saldo Consolidado</h2>
+      <p id="saldo-consolidado" class="text-3xl font-bold text-green-600 mt-2">R$ 0,00</p>
+    </div>
 
-  menuBtn.addEventListener("click", () => {
-    mobileMenu.classList.toggle("hidden");
-  });
-</script>
+    <!-- Últimas Movimentações -->
+    <div class="card mt-6 p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-4">Últimas Movimentações</h2>
+      <div class="overflow-x-auto">
+        <table class="table w-full">
+          <thead>
+            <tr>
+              <th class="text-left">Data</th>
+              <th class="text-left">Conta</th>
+              <th class="text-left">Título</th>
+              <th class="text-left">Tipo</th>
+              <th class="text-right">Valor</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-movimentacoes">
+            <!-- Linhas geradas dinamicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
 
-<script>
-  async function carregarContas() {
-    const contas = await window.profinanceAPI.listarContas();
-    console.log("Contas:", contas);
-  }
+  <!-- Scripts: carregue no final para garantir que o DOM esteja pronto -->
+  <script>
+    // Toggle Menu Mobile
+    (function() {
+      const menuBtn = document.getElementById("menu-btn");
+      const mobileMenu = document.getElementById("mobile-menu");
+      if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener("click", () => {
+          mobileMenu.classList.toggle("hidden");
+        });
+      }
+    })();
 
-  document.addEventListener("DOMContentLoaded", carregarContas);
-</script>
+    // Função única que busca e renderiza as contas
+    async function carregarContas() {
+      try {
+        const cardsContainer = document.getElementById("cards-contas");
+        const saldoConsolidadoEl = document.getElementById("saldo-consolidado");
+        const tabelaMov = document.getElementById("tabela-movimentacoes");
 
-<script>
-  const cardsContainer = document.getElementById("cards-contas");
+        if (!cardsContainer) return console.warn("cards-contas não encontrado no DOM");
 
-  async function carregarContas() {
-    const contas = await window.profinanceAPI.listarContas();
+        // Verifica se a API do preload está disponível
+        if (!window.profinanceAPI || typeof window.profinanceAPI.listarContas !== 'function') {
+          console.warn('profinanceAPI.listarContas não disponível');
+          cardsContainer.innerHTML = `
+            <div class="col-span-full text-center text-gray-500 dark:text-gray-400">
+              API não disponível. Verifique se o preload está carregado.
+            </div>
+          `;
+          return;
+        }
 
-    // Se não houver contas cadastradas
-    if (contas.length === 0) {
-      cardsContainer.innerHTML = `
-        <div class="col-span-full text-center text-gray-500 dark:text-gray-400">
-          Nenhuma conta cadastrada. Vá até <b>Contas</b> e cadastre uma.
-        </div>
-      `;
-      return;
+        const contas = await window.profinanceAPI.listarContas();
+
+        if (!contas || contas.length === 0) {
+          cardsContainer.innerHTML = `
+            <div class="col-span-full text-center text-gray-500 dark:text-gray-400">
+              Nenhuma conta cadastrada. Vá até <b>Contas</b> e cadastre uma.
+            </div>
+          `;
+
+          if (saldoConsolidadoEl) saldoConsolidadoEl.textContent = 'R$ 0,00';
+          if (tabelaMov) tabelaMov.innerHTML = '';
+          return;
+        }
+
+        // Renderiza os cards das contas
+        cardsContainer.innerHTML = contas.map(conta => `
+          <div class="card shadow-md hover:shadow-lg transition p-4 rounded bg-white dark:bg-gray-800">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">${conta.nome}</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300">${conta.banco || ''}</p>
+            <p class="mt-2 text-blue-600 dark:text-blue-400 font-bold">Saldo inicial: R$ ${Number(conta.saldo_inicial || 0).toFixed(2)}</p>
+            <button onclick="verTransacoes(${conta.id})" class="mt-4 button-primary w-full">Ver Transações</button>
+          </div>
+        `).join('');
+
+        // Atualiza saldo consolidado (soma dos saldos iniciais)
+        if (saldoConsolidadoEl) {
+          const total = contas.reduce((acc, c) => acc + Number(c.saldo_inicial || 0), 0);
+          // formata em pt-BR com 2 casas
+          saldoConsolidadoEl.textContent = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
+        }
+
+        // Carregar últimas movimentações (se a API suportar)
+        if (tabelaMov && window.profinanceAPI.listarMovimentacoes) {
+          try {
+            const movs = await window.profinanceAPI.listarMovimentacoes();
+            tabelaMov.innerHTML = (movs || []).slice(0, 10).map(m => `
+              <tr>
+                <td>${m.data || ''}</td>
+                <td>${m.conta_nome || ''}</td>
+                <td>${m.titulo || ''}</td>
+                <td>${m.tipo || ''}</td>
+                <td class="text-right">${m.valor ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(m.valor) : ''}</td>
+              </tr>
+            `).join('');
+          } catch (err) {
+            console.warn('Erro ao carregar movimentações:', err);
+            tabelaMov.innerHTML = '';
+          }
+        }
+
+      } catch (err) {
+        console.error('Erro ao carregar contas:', err);
+      }
     }
 
-    // Renderiza os cards das contas
-    cardsContainer.innerHTML = contas.map(conta => `
-      <div class="card shadow-md hover:shadow-lg transition">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">${conta.nome}</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-300">${conta.banco}</p>
-        <p class="mt-2 text-blue-600 dark:text-blue-400 font-bold">
-          Saldo inicial: R$ ${Number(conta.saldo_inicial).toFixed(2)}
-        </p>
-        <button
-          onclick="verTransacoes(${conta.id})"
-          class="mt-4 button-primary w-full"
-        >
-          Ver Transações
-        </button>
-      </div>
-    `).join("");
-  }
+    function verTransacoes(contaId) {
+      window.location.href = `transacoes.html?conta=${contaId}`;
+    }
 
-  function verTransacoes(contaId) {
-    window.location.href = `transacoes.html?conta=${contaId}`;
-  }
+    // Carrega ao iniciar
+    document.addEventListener('DOMContentLoaded', carregarContas);
 
-  document.addEventListener("DOMContentLoaded", carregarContas);
-</script>
-
-
-<div class="container">
-<h1 class="text-2xl font-bold mb-6">Dashboard Financeiro</h1>
-
-
-<!-- Cards das Contas -->
-<div id="cards-contas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-<!-- Cards gerados dinamicamente -->
-</div>
-
-
-<!-- Saldo Consolidado -->
-<div class="card mt-6">
-<h2 class="text-lg font-semibold">Saldo Consolidado</h2>
-<p id="saldo-consolidado" class="text-3xl font-bold text-green-600 mt-2">R$ 0,00</p>
-</div>
-
-
-<!-- Últimas Movimentações -->
-<div class="card mt-6">
-<h2 class="text-lg font-semibold mb-4">Últimas Movimentações</h2>
-<table class="table">
-<thead>
-<tr>
-<th>Data</th>
-<th>Conta</th>
-<th>Título</th>
-<th>Tipo</th>
-<th>Valor</th>
-</tr>
-</thead>
-<tbody id="tabela-movimentacoes">
+    // Se o preload expõe um onContasAtualizadas, registra para atualizações em tempo real
+    if (window.profinanceAPI && typeof window.profinanceAPI.onContasAtualizadas === 'function') {
+      // registra o callback: sempre que o main enviar um evento de atualização, recarregamos
+      window.profinanceAPI.onContasAtualizadas(() => {
+        console.log('Evento recebido: contas atualizadas -> recarregando dashboard');
+        carregarContas();
+      });
+    }
+  </script>
+</body>
+</html>

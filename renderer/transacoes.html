@@ -109,5 +109,22 @@
       </table>
     </div>
   </div>
+<script>
+  document.getElementById("form-conta").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const conta = {
+    nome: document.querySelector("#nome").value,
+    banco: document.querySelector("#banco").value,
+    numero: document.querySelector("#numero").value,
+    saldo_inicial: parseFloat(document.querySelector("#saldo").value),
+  };
+
+  const result = await window.api.criarConta(conta);
+  if (result.success) alert("Conta criada com sucesso!");
+});
+
+</script>
+
 </body>
 </html>
