@@ -1,3 +1,4 @@
+// main.js
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const Database = require("better-sqlite3");
@@ -12,6 +13,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    icon: path.join(__dirname, "renderer/assets/", "profinanceicon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "src/preload.js"),
       nodeIntegration: false,
@@ -38,10 +40,8 @@ app.on("window-all-closed", () => {
 });
 
 //
-// 📌 Rotas do banco via IPC
+// 📌 Criação das tabelas
 //
-
-// Criar tabela de contas se não existir
 db.prepare(`
   CREATE TABLE IF NOT EXISTS contas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,51 +53,74 @@ db.prepare(`
   )
 `).run();
 
-// Criar tabela de transações se não existir
 db.prepare(`
   CREATE TABLE IF NOT EXISTS transacoes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     conta_id INTEGER,
     titulo TEXT,
     valor REAL,
-    tipo TEXT,
+    tipo TEXT CHECK(tipo IN ('credito', 'debito')) NOT NULL,
     data TEXT,
     FOREIGN KEY (conta_id) REFERENCES contas (id)
   )
 `).run();
 
 //
-// 📌 Funções IPC para contas
+// 📌 IPC para CONTAS
 //
-
-// Obter todas as contas
 ipcMain.handle("get-contas", async () => {
   return db.prepare("SELECT * FROM contas").all();
 });
 
-// Criar nova conta
 ipcMain.handle("add-conta", async (_, conta) => {
   const stmt = db.prepare(`
     INSERT INTO contas (nome, banco, agencia, numero, saldo)
     VALUES (?, ?, ?, ?, ?)
   `);
-  const result = stmt.run(conta.nome, conta.banco, conta.agencia, conta.numero, conta.saldo || 0);
+  const result = stmt.run(
+    conta.nome,
+    conta.banco,
+    conta.agencia,
+    conta.numero,
+    conta.saldo || 0
+  );
   return { id: result.lastInsertRowid, ...conta };
 });
 
-// Excluir conta
 ipcMain.handle("delete-conta", async (_, id) => {
   db.prepare("DELETE FROM contas WHERE id = ?").run(id);
+  db.prepare("DELETE FROM transacoes WHERE conta_id = ?").run(id);
   return { success: true };
 });
 
 //
-// 📌 Funções IPC para transações
+// 📌 IPC para TRANSAÇÕES
 //
 
-// Obter transações por conta
+// Obter transações de uma conta específica
 ipcMain.handle("get-transacoes", async (_, contaId) => {
-  return db.prepare("SELECT * FROM transacoes WHERE conta_id = ? ORDER BY data DESC").all(contaId);
+  return db
+    .prepare(
+      `
+    SELECT t.*, c.nome AS conta_nome
+    FROM transacoes t
+    JOIN contas c ON c.id = t.conta_id
+    WHERE conta_id = ?
+    ORDER BY date(t.data) DESC
+  `
+    )
+    .all(contaId);
+});
+
+// Obter últimas 10 movimentações para o Dashboard
+ipcMain.handle("get-ultimas-movimentacoes", async () => {
+  return db.prepare(`
+    SELECT t.id, t.data, t.titulo, t.tipo, t.valor, c.nome AS conta_nome
+    FROM transacoes t
+    JOIN contas c ON c.id = t.conta_id
+    ORDER BY date(t.data) DESC, t.id DESC
+    LIMIT 10
+  `).all();
 });
 
 // Adicionar transação
@@ -106,10 +129,43 @@ ipcMain.handle("add-transacao", async (_, transacao) => {
     INSERT INTO transacoes (conta_id, titulo, valor, tipo, data)
     VALUES (?, ?, ?, ?, ?)
   `);
-  stmt.run(transacao.conta_id, transacao.titulo, transacao.valor, transacao.tipo, transacao.data);
+
+  stmt.run(
+    transacao.conta_id,
+    transacao.titulo,
+    transacao.valor,
+    transacao.tipo,
+    transacao.data
+  );
+
+  // Atualiza saldo da conta
   db.prepare("UPDATE contas SET saldo = saldo + ? WHERE id = ?").run(
     transacao.tipo === "credito" ? transacao.valor : -transacao.valor,
     transacao.conta_id
   );
+
+  return { success: true };
+});
+
+// Excluir transação
+ipcMain.handle("delete-transacao", async (_, id) => {
+  // Busca a transação para reverter saldo
+  const transacao = db
+    .prepare("SELECT valor, tipo, conta_id FROM transacoes WHERE id = ?")
+    .get(id);
+
+  if (transacao) {
+    const delta =
+      transacao.tipo === "credito"
+        ? -transacao.valor
+        : transacao.valor;
+
+    db.prepare("UPDATE contas SET saldo = saldo + ? WHERE id = ?").run(
+      delta,
+      transacao.conta_id
+    );
+  }
+
+  db.prepare("DELETE FROM transacoes WHERE id = ?").run(id);
   return { success: true };
 });

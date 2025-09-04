@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard | ProFinance</title>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
   <link rel="stylesheet" href="output.css">
   <script src="theme.js" defer></script>
 </head>
+
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
   <!-- Navbar -->
   <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
@@ -77,10 +80,10 @@
     </div>
   </main>
 
-  <!-- Scripts: carregue no final para garantir que o DOM esteja pronto -->
+  <!-- Scripts -->
   <script>
     // Toggle Menu Mobile
-    (function() {
+    (function () {
       const menuBtn = document.getElementById("menu-btn");
       const mobileMenu = document.getElementById("mobile-menu");
       if (menuBtn && mobileMenu) {
@@ -99,7 +102,6 @@
 
         if (!cardsContainer) return console.warn("cards-contas não encontrado no DOM");
 
-        // Verifica se a API do preload está disponível
         if (!window.profinanceAPI || typeof window.profinanceAPI.listarContas !== 'function') {
           console.warn('profinanceAPI.listarContas não disponível');
           cardsContainer.innerHTML = `
@@ -129,28 +131,30 @@
           <div class="card shadow-md hover:shadow-lg transition p-4 rounded bg-white dark:bg-gray-800">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">${conta.nome}</h3>
             <p class="text-sm text-gray-600 dark:text-gray-300">${conta.banco || ''}</p>
-            <p class="mt-2 text-blue-600 dark:text-blue-400 font-bold">Saldo inicial: R$ ${Number(conta.saldo_inicial || 0).toFixed(2)}</p>
+            <p class="mt-2 text-blue-600 dark:text-blue-400 font-bold">
+  Saldo atual: R$ ${Number(conta.saldo || 0).toFixed(2)}
+</p>
+
             <button onclick="verTransacoes(${conta.id})" class="mt-4 button-primary w-full">Ver Transações</button>
           </div>
         `).join('');
 
         // Atualiza saldo consolidado (soma dos saldos iniciais)
         if (saldoConsolidadoEl) {
-          const total = contas.reduce((acc, c) => acc + Number(c.saldo_inicial || 0), 0);
-          // formata em pt-BR com 2 casas
+          const total = contas.reduce((acc, c) => acc + Number(c.saldo || 0), 0);
           saldoConsolidadoEl.textContent = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
         }
 
-        // Carregar últimas movimentações (se a API suportar)
-        if (tabelaMov && window.profinanceAPI.listarMovimentacoes) {
+        // Carregar últimas movimentações (NOVA FUNÇÃO)
+        if (tabelaMov && window.profinanceAPI.listarUltimasMovimentacoes) {
           try {
-            const movs = await window.profinanceAPI.listarMovimentacoes();
-            tabelaMov.innerHTML = (movs || []).slice(0, 10).map(m => `
+            const movs = await window.profinanceAPI.listarUltimasMovimentacoes();
+            tabelaMov.innerHTML = (movs || []).map(m => `
               <tr>
                 <td>${m.data || ''}</td>
                 <td>${m.conta_nome || ''}</td>
                 <td>${m.titulo || ''}</td>
-                <td>${m.tipo || ''}</td>
+                <td class="${m.tipo === 'credito' ? 'text-green-600' : 'text-red-600'} font-semibold">${m.tipo}</td>
                 <td class="text-right">${m.valor ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(m.valor) : ''}</td>
               </tr>
             `).join('');
@@ -172,9 +176,8 @@
     // Carrega ao iniciar
     document.addEventListener('DOMContentLoaded', carregarContas);
 
-    // Se o preload expõe um onContasAtualizadas, registra para atualizações em tempo real
+    // Atualizações em tempo real das contas
     if (window.profinanceAPI && typeof window.profinanceAPI.onContasAtualizadas === 'function') {
-      // registra o callback: sempre que o main enviar um evento de atualização, recarregamos
       window.profinanceAPI.onContasAtualizadas(() => {
         console.log('Evento recebido: contas atualizadas -> recarregando dashboard');
         carregarContas();
@@ -182,4 +185,5 @@
     }
   </script>
 </body>
+
 </html>

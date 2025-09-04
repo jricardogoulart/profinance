@@ -6,20 +6,33 @@
   <title>Transações | ProFinance</title>
   <link rel="stylesheet" href="output.css">
   <script src="theme.js" defer></script>
-
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
-  <!-- 🔹 Navbar Global -->
-<nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+  <!-- Navbar -->
+  <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <img src="assets/profinance.svg" alt="ProFinance">
+    </div>
 
-  
-  <!-- 🔹 Logo -->
-  <div class="flex items-center space-x-3">
-    <img src="assets/profinance.svg" alt="ProFinance">
-  </div>
+    <div class="hidden md:flex space-x-6">
+      <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
+      <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
+      <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
+      <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
+      <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
+    </div>
 
-  <!-- 🔹 Links de Navegação -->
-  <div class="hidden md:flex space-x-6">
+    <div class="md:hidden">
+      <button id="menu-btn" class="text-white focus:outline-none">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Menu Mobile -->
+  <div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
     <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
     <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
     <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
@@ -27,103 +40,149 @@
     <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
   </div>
 
-  <!-- 🔹 Botão Menu Mobile -->
-  <div class="md:hidden">
-    <button id="menu-btn" class="text-white focus:outline-none">
-      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2"
-        viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M4 6h16M4 12h16m-7 6h7"></path>
-      </svg>
-    </button>
-  </div>
-</nav>
-
-<!-- 🔹 Menu Mobile -->
-<div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
-  <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
-  <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
-  <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
-  <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
-  <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
-</div>
-
-<script>
-  // Toggle Menu Mobile
-  const menuBtn = document.getElementById("menu-btn");
-  const mobileMenu = document.getElementById("mobile-menu");
-
-  menuBtn.addEventListener("click", () => {
-    mobileMenu.classList.toggle("hidden");
-  });
-</script>
-
-<script>
-  async function carregarContas() {
-    const contas = await window.profinanceAPI.listarContas();
-    console.log("Contas:", contas);
-  }
-
-  document.addEventListener("DOMContentLoaded", carregarContas);
-</script>
-
-  <div class="container">
+  <main class="container mx-auto p-6">
     <h1 class="text-2xl font-bold mb-6">Cadastro de Transações</h1>
 
     <!-- Formulário -->
-    <div class="card">
+    <div class="card mb-6 p-4 rounded shadow">
       <form id="form-transacao" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <select class="border rounded-lg p-2" required>
+        <select id="conta" class="border rounded-lg p-2" required>
           <option value="">Selecione a Conta</option>
         </select>
-        <input class="border rounded-lg p-2" type="text" placeholder="Título da Transação" required>
-        <input class="border rounded-lg p-2" type="number" placeholder="Valor" required>
-        <select class="border rounded-lg p-2" required>
+        <input id="titulo" class="border rounded-lg p-2" type="text" placeholder="Título da Transação" required>
+        <input id="valor" class="border rounded-lg p-2" type="number" step="0.01" placeholder="Valor" required>
+        <select id="tipo" class="border rounded-lg p-2" required>
           <option value="">Tipo</option>
           <option value="credito">Crédito</option>
           <option value="debito">Débito</option>
         </select>
-        <input class="border rounded-lg p-2" type="date" value="2025-09-01" required>
-        <textarea class="border rounded-lg p-2 col-span-full" placeholder="Descrição"></textarea>
+        <input id="data" class="border rounded-lg p-2" type="date" required>
+        <textarea id="descricao" class="border rounded-lg p-2 col-span-full" placeholder="Descrição"></textarea>
         <button class="button-primary col-span-full">Salvar Transação</button>
       </form>
     </div>
 
     <!-- Lista -->
-    <div class="card mt-6">
+    <div class="card p-4 rounded shadow">
       <h2 class="text-lg font-semibold mb-4">Transações Cadastradas</h2>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Conta</th>
-            <th>Título</th>
-            <th>Tipo</th>
-            <th>Valor</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tabela-transacoes">
-          <!-- Linhas dinâmicas -->
-        </tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="table w-full">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Conta</th>
+              <th>Título</th>
+              <th>Tipo</th>
+              <th>Valor</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-transacoes">
+            <!-- Linhas dinâmicas -->
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-<script>
-  document.getElementById("form-conta").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  
-  const conta = {
-    nome: document.querySelector("#nome").value,
-    banco: document.querySelector("#banco").value,
-    numero: document.querySelector("#numero").value,
-    saldo_inicial: parseFloat(document.querySelector("#saldo").value),
-  };
+  </main>
 
-  const result = await window.api.criarConta(conta);
-  if (result.success) alert("Conta criada com sucesso!");
-});
+  <script>
+  // Toggle menu mobile
+  document.getElementById("menu-btn").addEventListener("click", () => {
+    document.getElementById("mobile-menu").classList.toggle("hidden");
+  });
 
+  const form = document.getElementById("form-transacao");
+  const tabela = document.getElementById("tabela-transacoes");
+  const selectContas = document.getElementById("conta");
+
+  function formatBRL(valor) {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    }).format(Number(valor || 0));
+  }
+
+  // Carrega contas no select
+  async function carregarContas() {
+    const contas = await window.profinanceAPI.listarContas();
+    selectContas.innerHTML = '<option value="">Selecione a Conta</option>';
+
+    contas.forEach(c => {
+      const option = document.createElement("option");
+      option.value = c.id;
+      option.textContent = `${c.nome} (${c.banco})`;
+      selectContas.appendChild(option);
+    });
+
+    // Se houver contas, seleciona a primeira automaticamente
+    if (contas.length > 0) {
+      selectContas.value = contas[0].id;
+      await carregarTransacoes();
+    }
+  }
+
+  // Carrega transações da conta selecionada
+  async function carregarTransacoes() {
+    const contaId = selectContas.value;
+
+    if (!contaId) {
+      tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Selecione uma conta</td></tr>';
+      return;
+    }
+
+    const transacoes = await window.profinanceAPI.listarMovimentacoes(contaId);
+
+    if (!transacoes || transacoes.length === 0) {
+      tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma transação encontrada.</td></tr>';
+      return;
+    }
+
+    tabela.innerHTML = transacoes.map(t => `
+      <tr>
+        <td>${t.data || ""}</td>
+        <td>${t.conta_nome || ""}</td>
+        <td>${t.titulo}</td>
+        <td>${t.tipo === "credito" ? "Crédito" : "Débito"}</td>
+        <td>${formatBRL(t.valor)}</td>
+        <td class="text-center">
+          <button onclick="excluirTransacao(${t.id})" class="bg-red-500 text-white px-3 py-1 rounded">Excluir</button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  // Salva uma transação
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const transacao = {
+      conta_id: selectContas.value,
+      titulo: document.getElementById("titulo").value,
+      valor: parseFloat(document.getElementById("valor").value),
+      tipo: document.getElementById("tipo").value,
+      data: document.getElementById("data").value,
+      descricao: document.getElementById("descricao").value
+    };
+
+    await window.profinanceAPI.addTransacao(transacao);
+    form.reset();
+    await carregarTransacoes();
+  });
+
+  // Excluir transação
+  async function excluirTransacao(id) {
+    await window.profinanceAPI.excluirTransacao(id);
+    await carregarTransacoes();
+  }
+  window.excluirTransacao = excluirTransacao;
+
+  // Atualiza tabela ao trocar conta
+  selectContas.addEventListener("change", carregarTransacoes);
+
+  // Inicializa ao carregar página
+  document.addEventListener("DOMContentLoaded", async () => {
+    await carregarContas();
+  });
 </script>
 
 </body>
