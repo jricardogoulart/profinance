@@ -13,27 +13,15 @@ contextBridge.exposeInMainWorld("profinanceAPI", {
   listarUltimasMovimentacoes: () => ipcRenderer.invoke("get-ultimas-movimentacoes"),
   addTransacao: (transacao) => ipcRenderer.invoke("add-transacao", transacao),
   excluirTransacao: (id) => ipcRenderer.invoke("delete-transacao", id),
+  atualizarTransacao: (transacao) => ipcRenderer.invoke("update-transacao", transacao),
 
-  // Saldo consolidado calculado
+  // Saldo consolidado
   getSaldoConsolidado: () => ipcRenderer.invoke("get-saldo-consolidado"),
+
+  // Configurações
+  getConfig: () => ipcRenderer.invoke("get-config"),
+  setConfig: (config) => ipcRenderer.invoke("set-config", config),
 
   // Eventos
   onContasAtualizadas: (callback) => ipcRenderer.on("contas-atualizadas", callback)
 });
-
-
-
-contextBridge.exposeInMainWorld("config", {
-  getConfig: () => ipcRenderer.invoke("get-config"),
-  setConfig: (config) => ipcRenderer.invoke("set-config", config),
-
-  // Atualizações de contas e transações
-atualizarConta: (conta) => ipcRenderer.invoke("update-conta", conta),
-atualizarTransacao: (transacao) => ipcRenderer.invoke("update-transacao", transacao),
-
-// Query com filtros
-queryTransacoes: (params) => ipcRenderer.invoke("query-transacoes", params),
-
-});
-
-
