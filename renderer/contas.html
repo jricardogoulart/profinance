@@ -49,16 +49,31 @@
 
     <!-- Formulário -->
     <div class="card mb-6 p-4 rounded shadow">
-      <form id="form-conta" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input id="nome" name="nome" type="text" placeholder="Nome da Conta" required class="border rounded-lg p-2">
-        <input id="banco" name="banco" type="text" placeholder="Banco" required class="border rounded-lg p-2">
-        <input id="agencia" name="agencia" type="text" placeholder="Agência" class="border rounded-lg p-2">
-        <input id="numero" name="numero" type="text" placeholder="Número da Conta" class="border rounded-lg p-2">
-        <input id="saldo" name="saldo" type="number" placeholder="Saldo Inicial" step="0.01"
-          class="border rounded-lg p-2">
-        <button class="button-primary col-span-full">Salvar Conta</button>
-      </form>
+        <form id="form-conta" class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">
+            <div>
+                <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome da Conta</label>
+                <input id="nome" name="nome" type="text" required class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 w-full">
+            </div>
+            <div>
+                <label for="banco" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Banco</label>
+                <input id="banco" name="banco" type="text" required class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 w-full">
+            </div>
+            <div>
+                <label for="agencia" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Agência</label>
+                <input id="agencia" name="agencia" type="text" class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 w-full">
+            </div>
+            <div>
+                <label for="numero" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número da Conta</label>
+                <input id="numero" name="numero" type="text" class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 w-full">
+            </div>
+            <div class="md:col-span-2">
+                <label for="saldo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Saldo Inicial</label>
+                <input id="saldo" name="saldo" type="number" step="0.01" class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 w-full">
+            </div>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 col-span-full mt-2">Salvar Conta</button>
+        </form>
     </div>
+
 
     <!-- Lista de Contas -->
     <div class="card p-4 rounded shadow">
