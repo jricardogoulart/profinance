@@ -68,7 +68,7 @@
               <th class="text-left">Data</th>
               <th class="text-left">Conta</th>
               <th class="text-left">Título</th>
-              <th class="text-left">Tipo</th>
+              <th class="text-center">Tipo</th>
               <th class="text-right">Valor</th>
             </tr>
           </thead>
@@ -83,7 +83,7 @@
   <!-- Scripts -->
   <script>
     // Toggle Menu Mobile
-    (function () {
+    (() => {
       const menuBtn = document.getElementById("menu-btn");
       const mobileMenu = document.getElementById("mobile-menu");
       if (menuBtn && mobileMenu) {
@@ -93,97 +93,74 @@
       }
     })();
 
-    // Função única que busca e renderiza as contas
-    async function carregarContas() {
+    // Carregar contas, saldo e últimas movimentações
+    async function carregarDashboard() {
       try {
         const cardsContainer = document.getElementById("cards-contas");
         const saldoConsolidadoEl = document.getElementById("saldo-consolidado");
         const tabelaMov = document.getElementById("tabela-movimentacoes");
 
-        if (!cardsContainer) return console.warn("cards-contas não encontrado no DOM");
-
-        if (!window.profinanceAPI || typeof window.profinanceAPI.listarContas !== 'function') {
-          console.warn('profinanceAPI.listarContas não disponível');
-          cardsContainer.innerHTML = `
-            <div class="col-span-full text-center text-gray-500 dark:text-gray-400">
-              API não disponível. Verifique se o preload está carregado.
-            </div>
-          `;
-          return;
-        }
-
+        // Busca contas no banco
         const contas = await window.profinanceAPI.listarContas();
 
+        // Caso não tenha contas
         if (!contas || contas.length === 0) {
           cardsContainer.innerHTML = `
             <div class="col-span-full text-center text-gray-500 dark:text-gray-400">
               Nenhuma conta cadastrada. Vá até <b>Contas</b> e cadastre uma.
-            </div>
-          `;
-
-          if (saldoConsolidadoEl) saldoConsolidadoEl.textContent = 'R$ 0,00';
-          if (tabelaMov) tabelaMov.innerHTML = '';
+            </div>`;
+          saldoConsolidadoEl.textContent = "R$ 0,00";
+          tabelaMov.innerHTML = "";
           return;
         }
 
-        // Renderiza os cards das contas
+        // Render cards
         cardsContainer.innerHTML = contas.map(conta => `
           <div class="card shadow-md hover:shadow-lg transition p-4 rounded bg-white dark:bg-gray-800">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">${conta.nome}</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300">${conta.banco || ''}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-300">${conta.banco || ""}</p>
             <p class="mt-2 text-blue-600 dark:text-blue-400 font-bold">
-  Saldo atual: R$ ${Number(conta.saldo || 0).toFixed(2)}
-</p>
-
+              Saldo atual: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+            .format(Number(conta.saldo || 0))}
+            </p>
             <button onclick="verTransacoes(${conta.id})" class="mt-4 button-primary w-full">Ver Transações</button>
           </div>
-        `).join('');
+        `).join("");
 
-        // Atualiza saldo consolidado (soma dos saldos iniciais)
-        if (saldoConsolidadoEl) {
-          const total = contas.reduce((acc, c) => acc + Number(c.saldo || 0), 0);
-          saldoConsolidadoEl.textContent = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
-        }
+        // Saldo consolidado real
+        const saldoConsolidado = contas.reduce((acc, c) => acc + Number(c.saldo || 0), 0);
+        saldoConsolidadoEl.textContent = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(saldoConsolidado);
 
-        // Carregar últimas movimentações (NOVA FUNÇÃO)
-        if (tabelaMov && window.profinanceAPI.listarUltimasMovimentacoes) {
-          try {
-            const movs = await window.profinanceAPI.listarUltimasMovimentacoes();
-            tabelaMov.innerHTML = (movs || []).map(m => `
-              <tr>
-                <td>${m.data || ''}</td>
-                <td>${m.conta_nome || ''}</td>
-                <td>${m.titulo || ''}</td>
-                <td class="${m.tipo === 'credito' ? 'text-green-600' : 'text-red-600'} font-semibold">${m.tipo}</td>
-                <td class="text-right">${m.valor ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(m.valor) : ''}</td>
-              </tr>
-            `).join('');
-          } catch (err) {
-            console.warn('Erro ao carregar movimentações:', err);
-            tabelaMov.innerHTML = '';
-          }
-        }
+        // Últimas movimentações
+        const movs = await window.profinanceAPI.listarUltimasMovimentacoes();
+        tabelaMov.innerHTML = (movs || []).map(m => {
+          const isCredito = m.tipo === "credito";
+          const bgClass = isCredito ? "bg-green-600" : "bg-red-600";
+          const tipoLabel = isCredito ? "Crédito" : "Débito";
+          const valorText = `${isCredito ? "" : "-"}${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(m.valor)}`;
 
-      } catch (err) {
-        console.error('Erro ao carregar contas:', err);
+          return `
+            <tr>
+              <td>${m.data || ""}</td>
+              <td>${m.conta_nome || ""}</td>
+              <td>${m.titulo || ""}</td>
+              <td class="px-2 py-1 ${bgClass} text-white rounded text-center">${tipoLabel}</td>
+              <td class="text-right font-semibold">${valorText}</td>
+            </tr>
+          `;
+        }).join("");
+      } catch (error) {
+        console.error("Erro ao carregar dashboard:", error);
       }
     }
 
+    // Redireciona para transações da conta selecionada
     function verTransacoes(contaId) {
       window.location.href = `transacoes.html?conta=${contaId}`;
     }
 
-    // Carrega ao iniciar
-    document.addEventListener('DOMContentLoaded', carregarContas);
-
-    // Atualizações em tempo real das contas
-    if (window.profinanceAPI && typeof window.profinanceAPI.onContasAtualizadas === 'function') {
-      window.profinanceAPI.onContasAtualizadas(() => {
-        console.log('Evento recebido: contas atualizadas -> recarregando dashboard');
-        carregarContas();
-      });
-    }
+    // Inicia dashboard ao carregar página
+    document.addEventListener("DOMContentLoaded", carregarDashboard);
   </script>
 </body>
-
 </html>

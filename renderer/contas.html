@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contas Bancárias | ProFinance</title>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
   <link rel="stylesheet" href="output.css">
   <script src="theme.js" defer></script>
 </head>
+
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
   <!-- 🔹 Navbar Global -->
   <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
@@ -51,7 +54,8 @@
         <input id="banco" name="banco" type="text" placeholder="Banco" required class="border rounded-lg p-2">
         <input id="agencia" name="agencia" type="text" placeholder="Agência" class="border rounded-lg p-2">
         <input id="numero" name="numero" type="text" placeholder="Número da Conta" class="border rounded-lg p-2">
-        <input id="saldo" name="saldo" type="number" placeholder="Saldo Inicial" step="0.01" class="border rounded-lg p-2">
+        <input id="saldo" name="saldo" type="number" placeholder="Saldo Inicial" step="0.01"
+          class="border rounded-lg p-2">
         <button class="button-primary col-span-full">Salvar Conta</button>
       </form>
     </div>
@@ -90,88 +94,84 @@
       }
     })();
 
-    const form = document.getElementById('form-conta');
-    const tabela = document.getElementById('tabela-contas');
 
-    function formatBRL(valor) {
-      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor || 0));
-    }
+    const formConta = document.getElementById('form-conta');
+    const tabelaContas = document.getElementById('tabela-contas');
+
+    function formatBRL(valor) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor || 0)); }
 
     async function carregarContas() {
-      try {
-        if (!window.profinanceAPI || typeof window.profinanceAPI.listarContas !== 'function') {
-          tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">API não disponível. Verifique o preload.</td></tr>';
-          return;
-        }
-
-        const contas = await window.profinanceAPI.listarContas();
-
-        if (!contas || contas.length === 0) {
-          tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma conta cadastrada.</td></tr>';
-          return;
-        }
-
-        tabela.innerHTML = contas.map(c => `
-          <tr>
-            <td>${c.nome}</td>
-            <td>${c.banco || ''}</td>
-            <td>${c.agencia || ''}</td>
-            <td>${c.numero || ''}</td>
-            <td class="text-right">${formatBRL(c.saldo)}</td>
-            <td class="text-center">
-              <button onclick="excluirConta(${c.id})" class="bg-red-500 text-white px-3 py-1 rounded">Excluir</button>
-            </td>
-          </tr>
-        `).join('');
-      } catch (err) {
-        console.error('Erro ao carregar contas:', err);
-        tabela.innerHTML = '<tr><td colspan="6" class="text-center text-red-500">Erro ao carregar contas.</td></tr>';
+      const contas = await window.profinanceAPI.listarContas();
+      if (!contas || contas.length === 0) {
+        tabelaContas.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma conta cadastrada.</td></tr>';
+        return;
       }
+      tabelaContas.innerHTML = contas.map(c => `
+      <tr>
+        <td>${c.nome}</td>
+        <td>${c.banco}</td>
+        <td>${c.agencia}</td>
+        <td>${c.numero}</td>
+        <td class="text-right">${formatBRL(c.saldo)}</td>
+        <td class="text-center">
+          <button onclick="editarConta(${c.id})" class="bg-yellow-500 text-white px-3 py-1 rounded mr-2">Editar</button>
+          <button onclick="excluirConta(${c.id})" class="bg-red-600 text-white px-3 py-1 rounded">Excluir</button>
+        </td>
+      </tr>
+    `).join('');
     }
 
-    form.addEventListener('submit', async (e) => {
+    formConta.addEventListener('submit', async (e) => {
       e.preventDefault();
-      try {
-        if (!window.profinanceAPI || typeof window.profinanceAPI.cadastrarConta !== 'function') {
-          alert('API não disponível. Verifique o preload.');
-          return;
-        }
-
-        const conta = {
-          nome: form.nome.value.trim(),
-          banco: form.banco.value.trim(),
-          agencia: form.agencia.value.trim(),
-          numero: form.numero.value.trim(),
-          saldo: parseFloat(form.saldo.value) || 0,
-        };
-
-        await window.profinanceAPI.cadastrarConta(conta);
-        form.reset();
-        await carregarContas();
-      } catch (err) {
-        console.error('Erro ao adicionar conta:', err);
-        alert('Não foi possível salvar a conta.');
-      }
+      const conta = {
+        nome: formConta.nome.value.trim(),
+        banco: formConta.banco.value.trim(),
+        agencia: formConta.agencia.value.trim(),
+        numero: formConta.numero.value.trim(),
+        saldo: parseFloat(formConta.saldo.value) || 0
+      };
+      await window.profinanceAPI.cadastrarConta(conta);
+      showToast('Conta criada', 'success');
+      formConta.reset();
+      await carregarContas();
     });
 
     async function excluirConta(id) {
-      try {
-        if (!window.profinanceAPI || typeof window.profinanceAPI.excluirConta !== 'function') {
-          alert('API não disponível. Verifique o preload.');
-          return;
-        }
-        await window.profinanceAPI.excluirConta(id);
-        await carregarContas();
-      } catch (err) {
-        console.error('Erro ao excluir conta:', err);
-        alert('Não foi possível excluir a conta.');
-      }
+      if (!confirm('Confirma exclusão desta conta? Todas transações relacionadas serão removidas.')) return;
+      await window.profinanceAPI.excluirConta(id);
+      showToast('Conta excluída', 'info');
+      await carregarContas();
     }
 
-    // Deixa excluirConta acessível no escopo global para funcionar no onclick
-    window.excluirConta = excluirConta;
+    async function editarConta(id) {
+      const contas = await window.profinanceAPI.listarContas();
+      const c = contas.find(x => x.id === id);
+      if (!c) return alert('Conta não encontrada');
+
+      // prompt-based edit (pode trocar por modal)
+      const novoNome = prompt('Nome:', c.nome) || c.nome;
+      const novoBanco = prompt('Banco:', c.banco) || c.banco;
+      const novaAgencia = prompt('Agência:', c.agencia) || c.agencia;
+      const novoNumero = prompt('Número:', c.numero) || c.numero;
+      const novoSaldo = prompt('Saldo (use ponto para decimais):', String(c.saldo || 0)) || c.saldo;
+
+      const updated = { id: c.id, nome: novoNome, banco: novoBanco, agencia: novaAgencia, numero: novoNumero, saldo: parseFloat(novoSaldo) || 0 };
+      await window.profinanceAPI.atualizarConta(updated);
+      showToast('Conta atualizada', 'success');
+      await carregarContas();
+    }
+
+    function showToast(text, type = 'info') {
+      let t = document.getElementById('__toast');
+      if (!t) { t = document.createElement('div'); t.id = '__toast'; t.style.position = 'fixed'; t.style.right = '20px'; t.style.bottom = '20px'; t.style.zIndex = 99999; document.body.appendChild(t); }
+      const el = document.createElement('div'); el.className = 'p-3 rounded shadow-lg mb-2'; el.style.minWidth = '200px';
+      if (type === 'success') { el.style.background = '#10B981'; el.style.color = 'white'; } else if (type === 'info') { el.style.background = '#3B82F6'; el.style.color = 'white'; } else { el.style.background = '#EF4444'; el.style.color = 'white'; }
+      el.innerText = text; t.appendChild(el); setTimeout(() => el.remove(), 3200);
+    }
 
     document.addEventListener('DOMContentLoaded', carregarContas);
   </script>
+
 </body>
+
 </html>

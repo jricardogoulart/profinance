@@ -169,3 +169,76 @@ ipcMain.handle("delete-transacao", async (_, id) => {
   db.prepare("DELETE FROM transacoes WHERE id = ?").run(id);
   return { success: true };
 });
+//
+// 📌 IPC novos / atualizados
+//
+
+// Atualizar conta (edit)
+ipcMain.handle("update-conta", async (_, conta) => {
+  const stmt = db.prepare(`
+    UPDATE contas
+    SET nome = ?, banco = ?, agencia = ?, numero = ?, saldo = ?
+    WHERE id = ?
+  `);
+  stmt.run(conta.nome, conta.banco, conta.agencia, conta.numero, conta.saldo || 0, conta.id);
+  return { success: true };
+});
+
+// Buscar transações com filtros e ordenação (usado por transacoes.html)
+// params = { contaId, tipoFilter: 'credito'|'debito'|null, minValue, maxValue, sort: 'asc'|'desc' }
+ipcMain.handle("query-transacoes", async (_, params = {}) => {
+  const { contaId, tipoFilter, minValue, maxValue, sort } = params;
+  let where = [];
+  let args = [];
+
+  if (contaId) {
+    where.push("t.conta_id = ?");
+    args.push(contaId);
+  }
+  if (tipoFilter && (tipoFilter === "credito" || tipoFilter === "debito")) {
+    where.push("t.tipo = ?");
+    args.push(tipoFilter);
+  }
+  if (typeof minValue === "number") {
+    where.push("t.valor >= ?");
+    args.push(minValue);
+  }
+  if (typeof maxValue === "number") {
+    where.push("t.valor <= ?");
+    args.push(maxValue);
+  }
+
+  const whereSQL = where.length ? "WHERE " + where.join(" AND ") : "";
+  const orderSQL = sort === "asc" ? "ORDER BY date(t.data) ASC, t.id ASC" : "ORDER BY date(t.data) DESC, t.id DESC";
+
+  const sql = `
+    SELECT t.*, c.nome AS conta_nome
+    FROM transacoes t
+    JOIN contas c ON c.id = t.conta_id
+    ${whereSQL}
+    ${orderSQL}
+  `;
+  return db.prepare(sql).all(...args);
+});
+
+
+// 📌 Saldo consolidado calculado a partir das transações
+ipcMain.handle("get-saldo-consolidado", async () => {
+  try {
+    // Soma todos os créditos e subtrai os débitos
+    const row = db.prepare(`
+      SELECT
+        IFNULL(SUM(CASE WHEN tipo = 'credito' THEN valor ELSE -valor END), 0) AS saldo_total
+      FROM transacoes
+    `).get();
+
+    return row.saldo_total || 0;
+  } catch (error) {
+    console.error("Erro ao calcular saldo consolidado:", error);
+    return 0;
+  }
+  
+});
+
+
+     
