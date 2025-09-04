@@ -110,132 +110,156 @@
   </div>
 
   <script>
-document.getElementById('form-conta').addEventListener('submit', async (e) => {
-    e.preventDefault();
+ let contasCache = [];
 
-    const novaConta = {
-        nome: document.getElementById('nome').value,
-        banco: document.getElementById('banco').value,
-        agencia: document.getElementById('agencia').value,
-        numero: document.getElementById('numero').value,
-        saldo: parseFloat(document.getElementById('saldo').value) || 0
-    };
+// Formata valor em BRL
+function formatBRL(valor) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor || 0));
+}
 
-    try {
-        const response = await window.profinanceAPI.cadastrarConta(novaConta);
+// Atualiza cache e tabela
+async function atualizarCacheContas() {
+  try {
+    contasCache = await window.profinanceAPI.listarContas();
+    const tabela = document.getElementById('tabela-contas');
+    tabela.innerHTML = '';
 
-        if (response.id) { // Verifica se o backend retornou um ID (indicando sucesso)
-            showToast('Conta cadastrada com sucesso!', 'success');
-            document.getElementById('form-conta').reset();
-            
-            // Recarrega a lista de contas para mostrar a nova
-            await carregarContas(); 
-        } else {
-            console.error('Erro de backend:', response);
-            showToast('Erro ao cadastrar a conta.', 'error');
-        }
-    } catch (error) {
-        console.error('Erro ao enviar dados:', error);
-        showToast('Erro de comunicação. Não foi possível salvar a conta.', 'error');
+    if (!contasCache || contasCache.length === 0) {
+      tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma conta cadastrada.</td></tr>';
+      return;
     }
+
+    tabela.innerHTML = contasCache.map(c => `
+      <tr>
+        <td>${c.nome}</td>
+        <td>${c.banco}</td>
+        <td>${c.agencia}</td>
+        <td>${c.numero}</td>
+        <td class="text-right">${formatBRL(c.saldo)}</td>
+        <td class="text-center">
+          <button onclick="abrirModalConta(${c.id})" class="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full p-2 shadow transition">✏️</button>
+          <button onclick="excluirConta(${c.id})" class="bg-red-600 hover:bg-red-700 text-white rounded-full p-2 shadow transition">🗑️</button>
+        </td>
+      </tr>
+    `).join('');
+
+  } catch (err) {
+    console.error('Erro ao atualizar cache de contas:', err);
+    showToast('Erro ao carregar contas!', 'error');
+  }
+}
+
+// Inserir nova conta
+document.getElementById('form-conta').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const novaConta = {
+    nome: document.getElementById('nome').value.trim(),
+    banco: document.getElementById('banco').value.trim(),
+    agencia: document.getElementById('agencia').value.trim(),
+    numero: document.getElementById('numero').value.trim(),
+    saldo: parseFloat(document.getElementById('saldo').value) || 0
+  };
+
+  try {
+    await window.profinanceAPI.cadastrarConta(novaConta);
+    showToast('Conta cadastrada com sucesso!', 'success');
+    document.getElementById('form-conta').reset();
+    await atualizarCacheContas();
+  } catch (err) {
+    console.error('Erro ao inserir conta:', err);
+    showToast('Erro ao cadastrar conta!', 'error');
+  }
 });
 
-    let contasCache = [];
+// Abrir modal de edição
+function abrirModalConta(id) {
+  const conta = contasCache.find(c => c.id === id);
+  if (!conta) return;
 
-    function formatBRL(valor) {
-      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor || 0));
-    }
+  document.getElementById('edit-id').value = conta.id;
+  document.getElementById('edit-nome').value = conta.nome;
+  document.getElementById('edit-banco').value = conta.banco;
+  document.getElementById('edit-agencia').value = conta.agencia;
+  document.getElementById('edit-numero').value = conta.numero;
+  document.getElementById('edit-saldo').value = conta.saldo;
 
-    async function carregarContas() {
-      contasCache = await window.profinanceAPI.listarContas();
-      const tabela = document.getElementById('tabela-contas');
+  document.getElementById('modal-conta').classList.remove('hidden');
+}
 
-      if (!contasCache || contasCache.length === 0) {
-        tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma conta cadastrada.</td></tr>';
-        return;
-      }
+// Fechar modal
+function fecharModalConta() {
+  document.getElementById('modal-conta').classList.add('hidden');
+}
 
-      tabela.innerHTML = contasCache.map(c => `
-        <tr>
-          <td>${c.nome}</td>
-          <td>${c.banco}</td>
-          <td>${c.agencia}</td>
-          <td>${c.numero}</td>
-          <td class="text-right">${formatBRL(c.saldo)}</td>
-          <td class="text-center">
-            <button onclick="abrirModalConta(${c.id})" class="bg-yellow-500 text-white px-3 py-1 rounded mr-2">Editar</button>
-            <button onclick="excluirConta(${c.id})" class="bg-red-600 text-white px-3 py-1 rounded">Excluir</button>
-          </td>
-        </tr>
-      `).join('');
-    }
+// Editar conta
+document.getElementById('form-editar-conta').addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-    function abrirModalConta(id) {
-      const conta = contasCache.find(c => c.id === id);
-      if (!conta) return;
+  const contaAtualizada = {
+    id: Number(document.getElementById('edit-id').value),
+    nome: document.getElementById('edit-nome').value.trim(),
+    banco: document.getElementById('edit-banco').value.trim(),
+    agencia: document.getElementById('edit-agencia').value.trim(),
+    numero: document.getElementById('edit-numero').value.trim(),
+    saldo: parseFloat(document.getElementById('edit-saldo').value) || 0
+  };
 
-      document.getElementById('edit-id').value = conta.id;
-      document.getElementById('edit-nome').value = conta.nome;
-      document.getElementById('edit-banco').value = conta.banco;
-      document.getElementById('edit-agencia').value = conta.agencia;
-      document.getElementById('edit-numero').value = conta.numero;
-      document.getElementById('edit-saldo').value = conta.saldo;
+  try {
+    await window.profinanceAPI.atualizarConta(contaAtualizada);
+    showToast('Conta atualizada com sucesso!', 'success');
+    fecharModalConta();
+    await atualizarCacheContas();
+  } catch (err) {
+    console.error('Erro ao atualizar conta:', err);
+    showToast('Erro ao atualizar conta!', 'error');
+  }
+});
 
-      document.getElementById('modal-conta').classList.remove('hidden');
-    }
+// Excluir conta
+async function excluirConta(id) {
+  if (!confirm('Confirma exclusão desta conta? Todas as transações relacionadas serão removidas.')) return;
 
-    function fecharModalConta() {
-      document.getElementById('modal-conta').classList.add('hidden');
-    }
+  try {
+    await window.profinanceAPI.excluirConta(id);
+    showToast('Conta excluída!', 'info');
+    await atualizarCacheContas();
+  } catch (err) {
+    console.error('Erro ao excluir conta:', err);
+    showToast('Erro ao excluir conta!', 'error');
+  }
+}
 
-    document.getElementById('form-editar-conta').addEventListener('submit', async (e) => {
-      e.preventDefault();
+// Toast de notificação
+function showToast(text, type = 'info') {
+  let t = document.getElementById('__toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '__toast';
+    t.className = 'fixed right-5 bottom-5 z-[9999] flex flex-col items-end gap-2';
+    document.body.appendChild(t);
+  }
 
-      const contaAtualizada = {
-        id: Number(document.getElementById('edit-id').value),
-        nome: document.getElementById('edit-nome').value.trim(),
-        banco: document.getElementById('edit-banco').value.trim(),
-        agencia: document.getElementById('edit-agencia').value.trim(),
-        numero: document.getElementById('edit-numero').value.trim(),
-        saldo: parseFloat(document.getElementById('edit-saldo').value) || 0
-      };
+  const el = document.createElement('div');
+  el.className = 'p-3 rounded-lg shadow-lg text-white font-medium animate-pulse';
 
-      await window.profinanceAPI.atualizarConta(contaAtualizada);
-      showToast('Conta atualizada com sucesso!', 'success');
-      fecharModalConta();
-      await carregarContas();
-    });
+  if (type === 'success') el.style.background = '#10B981';
+  else if (type === 'info') el.style.background = '#3B82F6';
+  else el.style.background = '#EF4444';
 
-    async function excluirConta(id) {
-      if (!confirm('Confirma exclusão desta conta? Todas as transações relacionadas serão removidas.')) return;
-      await window.profinanceAPI.excluirConta(id);
-      showToast('Conta excluída!', 'info');
-      await carregarContas();
-    }
+  el.innerText = text;
+  t.appendChild(el);
 
-    function showToast(text, type = 'info') {
-      let t = document.getElementById('__toast');
-      if (!t) {
-        t = document.createElement('div');
-        t.id = '__toast';
-        t.className = 'fixed right-5 bottom-5 z-[9999] flex flex-col items-end gap-2';
-        document.body.appendChild(t);
-      }
-      const el = document.createElement('div');
-      el.className = 'p-3 rounded-lg shadow-lg text-white font-medium animate-pulse';
-      if (type === 'success') el.style.background = '#10B981';
-      else if (type === 'info') el.style.background = '#3B82F6';
-      else el.style.background = '#EF4444';
-      el.innerText = text;
-      t.appendChild(el);
-      setTimeout(() => {
-        el.style.opacity = '0';
-        el.style.transition = 'opacity 0.5s ease';
-        setTimeout(() => el.remove(), 500);
-      }, 3000);
-    }
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transition = 'opacity 0.5s ease';
+    setTimeout(() => el.remove(), 500);
+  }, 3000);
+}
 
-    document.addEventListener('DOMContentLoaded', carregarContas);
+// Inicializa a página
+document.addEventListener('DOMContentLoaded', atualizarCacheContas);
+
   </script>
 </body>
 </html>

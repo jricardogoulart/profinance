@@ -215,10 +215,16 @@
             <td>${safeText(t.titulo)}</td>
             <td><span class="px-2 py-1 ${bgClass} text-white rounded text-xs">${tipoLabel}</span></td>
             <td class="text-right font-medium ${isCredito ? 'text-green-500' : 'text-red-500'}">${formatBRL(t.valor, t.tipo)}</td>
-            <td class="text-center">
-              <button onclick="editarTransacao(${t.id})" class="px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-md shadow-sm hover:bg-blue-600 transition-colors">Editar</button>
-              <button onclick="excluirTransacao(${t.id})" class="px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-md shadow-sm hover:bg-red-600 transition-colors ml-2">Excluir</button>
-            </td>
+            <td class="text-center flex justify-center gap-2">
+  <button onclick="editarTransacao(${t.id})"
+    class="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full p-2 shadow transition">
+    ✏️
+  </button>
+  <button onclick="excluirTransacao(${t.id})"
+    class="bg-red-600 hover:bg-red-700 text-white rounded-full p-2 shadow transition">
+    🗑️
+  </button>
+</td>
           </tr>
         `;
       }).join("");
