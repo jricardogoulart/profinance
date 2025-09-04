@@ -45,10 +45,8 @@
 
     <!-- Formulário -->
     <div class="card mb-6 p-4 rounded shadow">
-      <form id="form-transacao" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <select id="conta" class="border rounded-lg p-2" required>
-          <option value="">Selecione a Conta</option>
-        </select>
+      <form id="form-transacao" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <select id="conta" class="border rounded-lg p-2" required></select>
         <input id="titulo" class="border rounded-lg p-2" type="text" placeholder="Título da Transação" required />
         <input id="valor" class="border rounded-lg p-2" type="number" step="0.01" placeholder="Valor" required />
         <select id="tipo" class="border rounded-lg p-2" required>
@@ -57,8 +55,7 @@
           <option value="debito">Débito</option>
         </select>
         <input id="data" class="border rounded-lg p-2" type="date" required />
-        <textarea id="descricao" class="border rounded-lg p-2 col-span-full" placeholder="Descrição"></textarea>
-        <button class="button-primary col-span-full">Salvar Transação</button>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 col-span-full">Salvar Transação</button>
       </form>
     </div>
 
@@ -78,8 +75,8 @@
         <input id="min-value" type="number" step="0.01" placeholder="Valor Mínimo" class="border rounded-lg p-2" />
         <input id="max-value" type="number" step="0.01" placeholder="Valor Máximo" class="border rounded-lg p-2" />
         <div class="flex gap-2">
-          <button id="apply-filters" class="button-primary w-full">Aplicar</button>
-          <button id="clear-filters" class="button-danger w-full">Limpar</button>
+          <button id="apply-filters" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 w-full">Aplicar</button>
+          <button id="clear-filters" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 w-full">Limpar</button>
         </div>
       </div>
     </div>
@@ -107,7 +104,32 @@
     </div>
   </main>
 
+  <!-- Modal Editar Transação -->
+  <div id="modal-transacao" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
+      <h2 class="text-xl font-semibold mb-4">Editar Transação</h2>
+      <form id="form-editar-transacao" class="grid grid-cols-1 gap-4">
+        <select id="edit-conta" class="border rounded-lg p-2 bg-white dark:bg-gray-700" required></select>
+        <input id="edit-titulo" class="border rounded-lg p-2 bg-white dark:bg-gray-700" type="text" required>
+        <input id="edit-valor" class="border rounded-lg p-2 bg-white dark:bg-gray-700" type="number" step="0.01" required>
+        <select id="edit-tipo" class="border rounded-lg p-2 bg-white dark:bg-gray-700" required>
+          <option value="credito">Crédito</option>
+          <option value="debito">Débito</option>
+        </select>
+        <input id="edit-data" class="border rounded-lg p-2 bg-white dark:bg-gray-700" type="date" required>
+        <div class="flex justify-end gap-2 pt-4">
+          <button type="button" onclick="fecharModalTransacao()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-500">Cancelar</button>
+          <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
+    // CORREÇÃO: Variável para guardar o cache das transações carregadas
+    let transacoesCache = [];
+    let transacaoEditandoId = null;
+
     // Helpers
     function formatBRL(valor, tipo) {
       const sign = tipo === "debito" ? "-" : "";
@@ -122,13 +144,13 @@
     const form = document.getElementById("form-transacao");
     const tabela = document.getElementById("tabela-transacoes");
     const selectContas = document.getElementById("conta");
+    const selectContasModal = document.getElementById("edit-conta");
 
     // Filtros
     const filterTipo = document.getElementById("filter-tipo");
     const sortDate = document.getElementById("sort-date");
     const minValue = document.getElementById("min-value");
     const maxValue = document.getElementById("max-value");
-
     const btnApply = document.getElementById("apply-filters");
     const btnClear = document.getElementById("clear-filters");
 
@@ -137,28 +159,28 @@
       return url.searchParams.get(name);
     }
 
-    async function carregarContas(selectFirst = true) {
+    async function carregarContas() {
       const contas = await window.profinanceAPI.listarContas();
-      selectContas.innerHTML = '<option value="">Selecione a Conta</option>';
-      contas.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c.id;
-        opt.textContent = `${c.nome} (${c.banco})`;
-        selectContas.appendChild(opt);
-      });
+      const optionsHTML = '<option value="">Selecione a Conta</option>' + contas.map(c =>
+        `<option value="${c.id}">${c.nome} (${c.banco})</option>`
+      ).join('');
+
+      selectContas.innerHTML = optionsHTML;
+      selectContasModal.innerHTML = optionsHTML.replace('Selecione a Conta', 'Mudar conta');
+
 
       const contaParam = getQueryParam("conta");
       if (contaParam && contas.some(c => String(c.id) === String(contaParam))) {
         selectContas.value = contaParam;
-      } else if (selectFirst && contas.length) {
+      } else if (contas.length) {
         selectContas.value = contas[0].id;
       }
     }
 
     async function carregarTransacoes() {
-      const contaId = selectContas.value;
+      const contaId = getQueryParam("conta") || selectContas.value;
       if (!contaId) {
-        tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Selecione uma conta</td></tr>';
+        tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Selecione uma conta para ver as transações</td></tr>';
         return;
       }
 
@@ -171,9 +193,12 @@
       };
 
       const transacoes = await window.profinanceAPI.queryTransacoes(params);
+      
+      // CORREÇÃO: Guarda o resultado no cache para ser usado na edição
+      transacoesCache = transacoes;
 
       if (!transacoes.length) {
-        tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma transação encontrada.</td></tr>';
+        tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma transação encontrada para os filtros aplicados.</td></tr>';
         return;
       }
 
@@ -181,20 +206,25 @@
         const isCredito = t.tipo === "credito";
         const bgClass = isCredito ? "bg-green-600" : "bg-red-600";
         const tipoLabel = isCredito ? "Crédito" : "Débito";
+        const dataFormatada = new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR');
+        
         return `
-          <tr>
-            <td>${safeText(t.data)}</td>
+          <tr class="hover:bg-gray-100 dark:hover:bg-gray-800">
+            <td>${dataFormatada}</td>
             <td>${safeText(t.conta_nome)}</td>
             <td>${safeText(t.titulo)}</td>
-            <td class="px-2 py-1 ${bgClass} text-white rounded text-center">${tipoLabel}</td>
-            <td class="text-right font-medium">${formatBRL(t.valor, t.tipo)}</td>
+            <td><span class="px-2 py-1 ${bgClass} text-white rounded text-xs">${tipoLabel}</span></td>
+            <td class="text-right font-medium ${isCredito ? 'text-green-500' : 'text-red-500'}">${formatBRL(t.valor, t.tipo)}</td>
             <td class="text-center">
-              <button onclick="excluirTransacao(${t.id})" class="bg-red-500 text-white px-3 py-1 rounded">Excluir</button>
+              <button onclick="editarTransacao(${t.id})" class="px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-md shadow-sm hover:bg-blue-600 transition-colors">Editar</button>
+              <button onclick="excluirTransacao(${t.id})" class="px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-md shadow-sm hover:bg-red-600 transition-colors ml-2">Excluir</button>
             </td>
           </tr>
         `;
       }).join("");
     }
+    
+    // --- LÓGICA DE SUBMISSÃO E AÇÕES ---
 
     form.addEventListener("submit", async e => {
       e.preventDefault();
@@ -204,20 +234,69 @@
         valor: parseFloat(document.getElementById("valor").value),
         tipo: document.getElementById("tipo").value,
         data: document.getElementById("data").value || new Date().toISOString().slice(0, 10),
-        descricao: document.getElementById("descricao").value.trim()
       };
       await window.profinanceAPI.addTransacao(transacao);
-      showToast("Transação salva", "success");
+      showToast("Transação salva com sucesso!", "success");
+      form.reset();
+      document.getElementById('data').valueAsDate = new Date();
       await carregarTransacoes();
     });
 
     async function excluirTransacao(id) {
-      if (!confirm("Confirma exclusão desta transação?")) return;
+      if (!confirm("Tem certeza que deseja excluir esta transação? A ação não pode ser desfeita.")) return;
       await window.profinanceAPI.excluirTransacao(id);
-      showToast("Transação excluída", "info");
+      showToast("Transação excluída.", "info");
       await carregarTransacoes();
     }
     window.excluirTransacao = excluirTransacao;
+
+    // --- LÓGICA DO MODAL DE EDIÇÃO (CORRIGIDO) ---
+    function editarTransacao(id) {
+        const transacao = transacoesCache.find(t => t.id === id);
+        if (!transacao) {
+            console.error("Transação não encontrada no cache.");
+            showToast("Erro: Transação não encontrada.", "error");
+            return;
+        }
+
+        transacaoEditandoId = id;
+        document.getElementById("edit-conta").value = transacao.conta_id;
+        document.getElementById("edit-titulo").value = transacao.titulo;
+        document.getElementById("edit-valor").value = transacao.valor;
+        document.getElementById("edit-tipo").value = transacao.tipo;
+        document.getElementById("edit-data").value = transacao.data;
+
+        document.getElementById("modal-transacao").classList.remove("hidden");
+    }
+    window.editarTransacao = editarTransacao;
+
+    function fecharModalTransacao() {
+      document.getElementById("modal-transacao").classList.add("hidden");
+      transacaoEditandoId = null;
+    }
+    window.fecharModalTransacao = fecharModalTransacao;
+
+    document.getElementById("form-editar-transacao").addEventListener("submit", async e => {
+        e.preventDefault();
+        if (!transacaoEditandoId) return;
+
+        const transacaoAtualizada = {
+            id: transacaoEditandoId,
+            conta_id: Number(document.getElementById("edit-conta").value),
+            titulo: document.getElementById("edit-titulo").value.trim(),
+            valor: parseFloat(document.getElementById("edit-valor").value),
+            tipo: document.getElementById("edit-tipo").value,
+            data: document.getElementById("edit-data").value
+        };
+        
+        await window.profinanceAPI.atualizarTransacao(transacaoAtualizada);
+        showToast("Transação atualizada!", "success");
+        fecharModalTransacao();
+        await carregarTransacoes();
+    });
+
+
+    // --- FILTROS E EVENTOS ---
 
     btnApply.addEventListener("click", carregarTransacoes);
     btnClear.addEventListener("click", () => {
@@ -228,34 +307,43 @@
       carregarTransacoes();
     });
 
-    selectContas.addEventListener("change", carregarTransacoes);
+    selectContas.addEventListener("change", (e) => {
+        const url = new URL(window.location);
+        url.searchParams.set('conta', e.target.value);
+        window.history.pushState({}, '', url);
+        carregarTransacoes();
+    });
+
+    // --- INICIALIZAÇÃO ---
 
     function showToast(text, type = "info") {
       let t = document.getElementById("__toast");
       if (!t) {
         t = document.createElement("div");
         t.id = "__toast";
-        t.style.position = "fixed";
-        t.style.right = "20px";
-        t.style.bottom = "20px";
-        t.style.zIndex = 9999;
+        t.className = "fixed right-5 bottom-5 z-[9999] flex flex-col items-end gap-2";
         document.body.appendChild(t);
       }
       const el = document.createElement("div");
-      el.className = "p-3 rounded shadow-lg mb-2";
-      el.style.minWidth = "200px";
-      if (type === "success") { el.style.background = "#10B981"; el.style.color = "white"; }
-      else if (type === "info") { el.style.background = "#3B82F6"; el.style.color = "white"; }
-      else { el.style.background = "#EF4444"; el.style.color = "white"; }
+      el.className = "p-3 rounded-lg shadow-lg text-white font-medium animate-pulse";
+      if (type === "success") el.style.background = "#10B981";
+      else if (type === "info") el.style.background = "#3B82F6";
+      else el.style.background = "#EF4444";
       el.innerText = text;
       t.appendChild(el);
-      setTimeout(() => el.remove(), 3500);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => el.remove(), 500);
+      }, 3500);
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
-      await carregarContas(true);
+      await carregarContas();
       await carregarTransacoes();
+      document.getElementById('data').valueAsDate = new Date();
     });
   </script>
 </body>
 </html>
+

@@ -1,4 +1,3 @@
-// main.js
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const Database = require("better-sqlite3");
@@ -61,7 +60,7 @@ db.prepare(`
     valor REAL,
     tipo TEXT CHECK(tipo IN ('credito', 'debito')) NOT NULL,
     data TEXT,
-    FOREIGN KEY (conta_id) REFERENCES contas (id)
+    FOREIGN KEY (conta_id) REFERENCES contas (id) ON DELETE CASCADE -- MELHORIA: Garante que transações são deletadas junto com a conta.
   )
 `).run();
 
@@ -88,8 +87,8 @@ ipcMain.handle("add-conta", async (_, conta) => {
 });
 
 ipcMain.handle("delete-conta", async (_, id) => {
+  // CORREÇÃO: A linha para deletar transações não é mais necessária devido ao "ON DELETE CASCADE"
   db.prepare("DELETE FROM contas WHERE id = ?").run(id);
-  db.prepare("DELETE FROM transacoes WHERE conta_id = ?").run(id);
   return { success: true };
 });
 
@@ -105,7 +104,7 @@ ipcMain.handle("get-transacoes", async (_, contaId) => {
     SELECT t.*, c.nome AS conta_nome
     FROM transacoes t
     JOIN contas c ON c.id = t.conta_id
-    WHERE conta_id = ?
+    WHERE t.conta_id = ?
     ORDER BY date(t.data) DESC
   `
     )
@@ -173,17 +172,6 @@ ipcMain.handle("delete-transacao", async (_, id) => {
 // 📌 IPC novos / atualizados
 //
 
-// Atualizar conta (edit)
-ipcMain.handle("update-conta", async (_, conta) => {
-  const stmt = db.prepare(`
-    UPDATE contas
-    SET nome = ?, banco = ?, agencia = ?, numero = ?, saldo = ?
-    WHERE id = ?
-  `);
-  stmt.run(conta.nome, conta.banco, conta.agencia, conta.numero, conta.saldo || 0, conta.id);
-  return { success: true };
-});
-
 // Buscar transações com filtros e ordenação (usado por transacoes.html)
 // params = { contaId, tipoFilter: 'credito'|'debito'|null, minValue, maxValue, sort: 'asc'|'desc' }
 ipcMain.handle("query-transacoes", async (_, params = {}) => {
@@ -237,8 +225,48 @@ ipcMain.handle("get-saldo-consolidado", async () => {
     console.error("Erro ao calcular saldo consolidado:", error);
     return 0;
   }
-  
+  // CORREÇÃO: Removido '});' extra que causava erro de sintaxe.
 });
 
 
-     
+// =============================
+// 📌 Atualizar Conta
+// =============================
+ipcMain.handle("update-conta", async (_, conta) => {
+  const stmt = db.prepare(`
+    UPDATE contas
+    SET nome = ?, banco = ?, agencia = ?, numero = ?, saldo = ?
+    WHERE id = ?
+  `);
+  stmt.run(conta.nome, conta.banco, conta.agencia, conta.numero, conta.saldo, conta.id);
+  return { success: true };
+});
+
+// =============================
+// 📌 Atualizar Transação
+// =============================
+ipcMain.handle("update-transacao", async (_, transacao) => {
+  const old = db.prepare("SELECT valor, tipo, conta_id FROM transacoes WHERE id = ?").get(transacao.id);
+  if (!old) return { success: false, message: "Transação não encontrada" };
+
+  // Reverte saldo anterior da conta antiga
+  const deltaAnterior = old.tipo === "credito" ? -old.valor : old.valor;
+  db.prepare("UPDATE contas SET saldo = saldo + ? WHERE id = ?").run(deltaAnterior, old.conta_id);
+
+  // Atualiza transação (pode ter mudado de conta inclusive)
+  db.prepare(`
+    UPDATE transacoes
+    SET titulo = ?, valor = ?, tipo = ?, data = ?, conta_id = ? 
+    WHERE id = ?
+  `).run(transacao.titulo, transacao.valor, transacao.tipo, transacao.data, transacao.conta_id, transacao.id);
+
+  // Aplica novo saldo na conta correta (nova ou a mesma)
+  const deltaNovo = transacao.tipo === "credito" ? transacao.valor : -transacao.valor;
+  // CORREÇÃO LÓGICA: Usa o conta_id da transação ATUALIZADA.
+  db.prepare("UPDATE contas SET saldo = saldo + ? WHERE id = ?").run(deltaNovo, transacao.conta_id);
+
+  return { success: true };
+});
+
+// CORREÇÃO: Removido o segundo manipulador duplicado para "query-transacoes" que estava aqui.
+

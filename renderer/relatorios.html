@@ -5,22 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Relatórios | ProFinance</title>
   <link rel="stylesheet" href="output.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="theme.js" defer></script>
-
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
   <!-- 🔹 Navbar Global -->
-<nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+  <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <img src="assets/profinance.svg" alt="ProFinance">
+    </div>
+    <div class="hidden md:flex space-x-6">
+      <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
+      <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
+      <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
+      <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
+      <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
+    </div>
+    <div class="md:hidden">
+      <button id="menu-btn" class="text-white focus:outline-none">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 6h16M4 12h16m-7 6h7"></path>
+        </svg>
+      </button>
+    </div>
+  </nav>
 
-
-  
-  <!-- 🔹 Logo -->
-  <div class="flex items-center space-x-3">
-    <img src="assets/profinance.svg" alt="ProFinance">
-  </div>
-
-  <!-- 🔹 Links de Navegação -->
-  <div class="hidden md:flex space-x-6">
+  <!-- 🔹 Menu Mobile -->
+  <div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
     <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
     <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
     <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
@@ -28,84 +40,158 @@
     <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
   </div>
 
-  <!-- 🔹 Botão Menu Mobile -->
-  <div class="md:hidden">
-    <button id="menu-btn" class="text-white focus:outline-none">
-      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2"
-        viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M4 6h16M4 12h16m-7 6h7"></path>
-      </svg>
-    </button>
-  </div>
-</nav>
-
-<!-- 🔹 Menu Mobile -->
-<div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
-  <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
-  <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
-  <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
-  <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
-  <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
-</div>
-
-<script>
-  // Toggle Menu Mobile
-  const menuBtn = document.getElementById("menu-btn");
-  const mobileMenu = document.getElementById("mobile-menu");
-
-  menuBtn.addEventListener("click", () => {
-    mobileMenu.classList.toggle("hidden");
-  });
-</script>
-
-<script>
-  async function carregarContas() {
-    const contas = await window.profinanceAPI.listarContas();
-    console.log("Contas:", contas);
-  }
-
-  document.addEventListener("DOMContentLoaded", carregarContas);
-</script>
-
-  <div class="container">
+  <div class="container mx-auto p-6">
     <h1 class="text-2xl font-bold mb-6">Relatórios Financeiros</h1>
 
     <!-- Filtros -->
-    <div class="card">
-      <form id="form-relatorio" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <select class="border rounded-lg p-2">
+    <div class="card mb-6 p-4 rounded shadow">
+      <form id="form-relatorio" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <select id="filtro-conta" class="border rounded-lg p-2">
           <option value="">Todas as Contas</option>
         </select>
-        <input class="border rounded-lg p-2" type="date">
-        <input class="border rounded-lg p-2" type="date">
-        <select class="border rounded-lg p-2">
+        <input id="filtro-data-inicio" class="border rounded-lg p-2" type="date">
+        <input id="filtro-data-fim" class="border rounded-lg p-2" type="date">
+        <select id="filtro-tipo" class="border rounded-lg p-2">
           <option value="">Todos os Tipos</option>
           <option value="credito">Crédito</option>
           <option value="debito">Débito</option>
         </select>
-        <button class="button-primary col-span-full">Filtrar</button>
+        <div class="flex gap-2">
+          <button id="btn-filtrar" type="submit" class="button-primary w-full">Filtrar</button>
+          <button id="btn-limpar" type="button" class="button-secondary w-full">Limpar</button>
+        </div>
       </form>
     </div>
 
-    <!-- Resultado -->
-    <div class="card mt-6">
+    <!-- Resumo -->
+    <div class="card p-4 rounded shadow">
       <h2 class="text-lg font-semibold mb-4">Resumo do Período</h2>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="card">
+        <div class="card p-4 rounded shadow bg-green-100 dark:bg-green-700">
           <p>Total Créditos</p>
-          <span class="text-green-600 text-2xl font-bold">R$ 0,00</span>
+          <span id="total-creditos" class="text-green-600 dark:text-green-200 text-2xl font-bold">R$ 0,00</span>
         </div>
-        <div class="card">
+        <div class="card p-4 rounded shadow bg-red-100 dark:bg-red-700">
           <p>Total Débitos</p>
-          <span class="text-red-600 text-2xl font-bold">R$ 0,00</span>
+          <span id="total-debitos" class="text-red-600 dark:text-red-200 text-2xl font-bold">R$ 0,00</span>
         </div>
-        <div class="card">
+        <div class="card p-4 rounded shadow bg-blue-100 dark:bg-blue-700">
           <p>Saldo Final</p>
-          <span class="text-blue-600 text-2xl font-bold">R$ 0,00</span>
+          <span id="saldo-final" class="text-blue-600 dark:text-blue-200 text-2xl font-bold">R$ 0,00</span>
         </div>
       </div>
     </div>
+
+    <!-- Gráficos -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <div class="card p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-4">Entradas x Saídas</h2>
+        <canvas id="grafico-entradas-saidas"></canvas>
+      </div>
+      <div class="card p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-4">Saldo Acumulado</h2>
+        <canvas id="grafico-saldo"></canvas>
+      </div>
+    </div>
+
+    <!-- Exportação -->
+    <div class="flex justify-end gap-4 mt-6">
+      <button id="btn-export-pdf" class="button-primary">Exportar PDF</button>
+      <button id="btn-export-csv" class="button-secondary">Exportar CSV</button>
+    </div>
   </div>
+
+  <script>
+    // Helpers
+    function formatBRL(valor) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency', currency: 'BRL'
+      }).format(valor || 0);
+    }
+
+    async function carregarContas() {
+      const contas = await window.profinanceAPI.listarContas();
+      const select = document.getElementById("filtro-conta");
+      select.innerHTML = '<option value="">Todas as Contas</option>';
+      contas.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = `${c.nome} (${c.banco})`;
+        select.appendChild(opt);
+      });
+    }
+
+    async function carregarRelatorio() {
+      const contaId = document.getElementById("filtro-conta").value;
+      const inicio = document.getElementById("filtro-data-inicio").value;
+      const fim = document.getElementById("filtro-data-fim").value;
+      const tipo = document.getElementById("filtro-tipo").value;
+
+      const params = { contaId, inicio, fim, tipo };
+      const transacoes = await window.profinanceAPI.queryTransacoes(params);
+
+      // Calcula totais
+      const totalCreditos = transacoes
+        .filter(t => t.tipo === "credito")
+        .reduce((acc, t) => acc + t.valor, 0);
+      const totalDebitos = transacoes
+        .filter(t => t.tipo === "debito")
+        .reduce((acc, t) => acc + t.valor, 0);
+
+      document.getElementById("total-creditos").textContent = formatBRL(totalCreditos);
+      document.getElementById("total-debitos").textContent = formatBRL(totalDebitos);
+      document.getElementById("saldo-final").textContent = formatBRL(totalCreditos - totalDebitos);
+
+      // Atualiza gráficos
+      atualizarGraficos(transacoes);
+    }
+
+    function atualizarGraficos(transacoes) {
+      const ctx1 = document.getElementById("grafico-entradas-saidas");
+      const ctx2 = document.getElementById("grafico-saldo");
+
+      const meses = [...new Set(transacoes.map(t => t.data.slice(0, 7)))];
+      const entradas = meses.map(m => transacoes.filter(t => t.tipo === "credito" && t.data.startsWith(m)).reduce((acc, t) => acc + t.valor, 0));
+      const saidas = meses.map(m => transacoes.filter(t => t.tipo === "debito" && t.data.startsWith(m)).reduce((acc, t) => acc + t.valor, 0));
+      const saldo = meses.map((m, i) => entradas.slice(0, i + 1).reduce((a, b) => a + b, 0) - saidas.slice(0, i + 1).reduce((a, b) => a + b, 0));
+
+      new Chart(ctx1, {
+        type: "bar",
+        data: {
+          labels: meses,
+          datasets: [
+            { label: "Entradas", data: entradas, backgroundColor: "green" },
+            { label: "Saídas", data: saidas, backgroundColor: "red" }
+          ]
+        }
+      });
+
+      new Chart(ctx2, {
+        type: "line",
+        data: {
+          labels: meses,
+          datasets: [{ label: "Saldo Acumulado", data: saldo, borderColor: "blue", fill: true }]
+        }
+      });
+    }
+
+    document.getElementById("form-relatorio").addEventListener("submit", async e => {
+      e.preventDefault();
+      await carregarRelatorio();
+    });
+
+    document.getElementById("btn-limpar").addEventListener("click", async () => {
+      document.getElementById("filtro-conta").value = "";
+      document.getElementById("filtro-data-inicio").value = "";
+      document.getElementById("filtro-data-fim").value = "";
+      document.getElementById("filtro-tipo").value = "";
+      await carregarRelatorio();
+    });
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await carregarContas();
+      await carregarRelatorio();
+    });
+  </script>
 </body>
 </html>
