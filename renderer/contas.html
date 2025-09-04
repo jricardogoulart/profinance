@@ -110,6 +110,36 @@
   </div>
 
   <script>
+document.getElementById('form-conta').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const novaConta = {
+        nome: document.getElementById('nome').value,
+        banco: document.getElementById('banco').value,
+        agencia: document.getElementById('agencia').value,
+        numero: document.getElementById('numero').value,
+        saldo: parseFloat(document.getElementById('saldo').value) || 0
+    };
+
+    try {
+        const response = await window.profinanceAPI.cadastrarConta(novaConta);
+
+        if (response.id) { // Verifica se o backend retornou um ID (indicando sucesso)
+            showToast('Conta cadastrada com sucesso!', 'success');
+            document.getElementById('form-conta').reset();
+            
+            // Recarrega a lista de contas para mostrar a nova
+            await carregarContas(); 
+        } else {
+            console.error('Erro de backend:', response);
+            showToast('Erro ao cadastrar a conta.', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao enviar dados:', error);
+        showToast('Erro de comunicação. Não foi possível salvar a conta.', 'error');
+    }
+});
+
     let contasCache = [];
 
     function formatBRL(valor) {

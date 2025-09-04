@@ -4,15 +4,15 @@
   "description": "Sistema de controle financeiro desktop (Electron + Tailwind)",
   "main": "main.js",
   "scripts": {
-  "start": "concurrently \"npm run dev:css\" \"electron .\"",
-  "dev:css": "npx tailwindcss -i ./renderer/styles.css -o ./renderer/output.css --watch"
-}
-,
+    "start": "concurrently \"npm run dev:css\" \"electron .\"",
+    "dev:css": "npx tailwindcss -i ./renderer/styles.css -o ./renderer/output.css --watch"
+  },
   "author": "Ricardo Goulart",
   "license": "MIT",
   "devDependencies": {
     "autoprefixer": "^10.4.21",
     "electron": "^29.4.6",
+    "electron-rebuild": "^3.2.9",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17"
   },
