@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,7 +9,6 @@
   <link rel="stylesheet" href="output.css">
   <script src="theme.js" defer></script>
 </head>
-
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
   <!-- Navbar -->
   <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
@@ -48,9 +46,7 @@
     <h1 class="text-2xl font-bold mb-6">Dashboard Financeiro</h1>
 
     <!-- Cards das Contas -->
-    <div id="cards-contas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Cards gerados dinamicamente -->
-    </div>
+    <div id="cards-contas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
     <!-- Saldo Consolidado -->
     <div class="card mt-6 p-4 rounded shadow">
@@ -65,24 +61,20 @@
         <table class="table w-full">
           <thead>
             <tr>
-              <th class="text-left">Data</th>
-              <th class="text-left">Conta</th>
-              <th class="text-left">Título</th>
+              <th>Data</th>
+              <th>Conta</th>
+              <th>Título</th>
               <th class="text-center">Tipo</th>
               <th class="text-right">Valor</th>
             </tr>
           </thead>
-          <tbody id="tabela-movimentacoes">
-            <!-- Linhas geradas dinamicamente -->
-          </tbody>
+          <tbody id="tabela-movimentacoes"></tbody>
         </table>
       </div>
     </div>
   </main>
 
-  <!-- Scripts -->
   <script>
-    // Toggle Menu Mobile
     (() => {
       const menuBtn = document.getElementById("menu-btn");
       const mobileMenu = document.getElementById("mobile-menu");
@@ -93,52 +85,43 @@
       }
     })();
 
-    // Carregar contas, saldo e últimas movimentações
     async function carregarDashboard() {
       try {
         const cardsContainer = document.getElementById("cards-contas");
         const saldoConsolidadoEl = document.getElementById("saldo-consolidado");
         const tabelaMov = document.getElementById("tabela-movimentacoes");
-
-        // Busca contas no banco
         const contas = await window.profinanceAPI.listarContas();
 
-        // Caso não tenha contas
         if (!contas || contas.length === 0) {
           cardsContainer.innerHTML = `
-            <div class="col-span-full text-center text-gray-500 dark:text-gray-400">
-              Nenhuma conta cadastrada. Vá até <b>Contas</b> e cadastre uma.
+            <div class="col-span-full text-center text-gray-500">
+              Nenhuma conta cadastrada.
             </div>`;
           saldoConsolidadoEl.textContent = "R$ 0,00";
           tabelaMov.innerHTML = "";
           return;
         }
 
-        // Render cards
         cardsContainer.innerHTML = contas.map(conta => `
           <div class="card shadow-md hover:shadow-lg transition p-4 rounded bg-white dark:bg-gray-800">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">${conta.nome}</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300">${conta.banco || ""}</p>
-            <p class="mt-2 text-blue-600 dark:text-blue-400 font-bold">
-              Saldo atual: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-            .format(Number(conta.saldo || 0))}
+            <h3 class="text-lg font-semibold">${conta.nome}</h3>
+            <p>${conta.banco || ""}</p>
+            <p class="mt-2 text-blue-600 font-bold">
+              Saldo atual: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(conta.saldo || 0))}
             </p>
             <button onclick="verTransacoes(${conta.id})" class="mt-4 button-primary w-full">Ver Transações</button>
           </div>
         `).join("");
 
-        // Saldo consolidado real
         const saldoConsolidado = contas.reduce((acc, c) => acc + Number(c.saldo || 0), 0);
         saldoConsolidadoEl.textContent = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(saldoConsolidado);
 
-        // Últimas movimentações
         const movs = await window.profinanceAPI.listarUltimasMovimentacoes();
         tabelaMov.innerHTML = (movs || []).map(m => {
           const isCredito = m.tipo === "credito";
           const bgClass = isCredito ? "bg-green-600" : "bg-red-600";
           const tipoLabel = isCredito ? "Crédito" : "Débito";
           const valorText = `${isCredito ? "" : "-"}${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(m.valor)}`;
-
           return `
             <tr>
               <td>${m.data || ""}</td>
@@ -154,12 +137,10 @@
       }
     }
 
-    // Redireciona para transações da conta selecionada
     function verTransacoes(contaId) {
       window.location.href = `transacoes.html?conta=${contaId}`;
     }
 
-    // Inicia dashboard ao carregar página
     document.addEventListener("DOMContentLoaded", carregarDashboard);
   </script>
 </body>
