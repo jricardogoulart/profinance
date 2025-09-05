@@ -7,10 +7,13 @@
   <link rel="stylesheet" href="output.css">
   <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.3.1/decimal.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
   <script src="theme.js" defer></script>
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
-  <!-- Navbar (omitida aqui para brevidade: igual ao seu original) -->
+
+  <!-- Navbar -->
   <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
     <div class="flex items-center space-x-3"><img src="assets/profinance.svg" alt="ProFinance"></div>
     <div class="hidden md:flex space-x-6">
@@ -115,16 +118,11 @@
   </div>
 
 <script>
-  // Globals for charts
   let graficoEntradasSaidas = null;
   let graficoSaldo = null;
 
-  // Utility: format Decimal (or number/string) to BRL display safely
-  function formatBRLDecimal(d) {
-    // d can be Decimal, number or string — normalize to Decimal
-    const dec = new Decimal(d || 0);
-    // toFixed(2) -> string with correct rounding, then convert to Number for Intl formatting
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(dec.toFixed(2)));
+  function formatBRL(d) {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(new Decimal(d || 0).toFixed(2)));
   }
 
   async function carregarContas() {
@@ -139,45 +137,16 @@
     });
   }
 
-  function agruparMesesOrdenados(transacoes) {
-    const mesesSet = new Set(transacoes.map(t => t.data.slice(0,7)));
-    const meses = Array.from(mesesSet).sort();
-    return meses;
-  }
-
-  function criarDadosPorMes(transacoes, meses) {
-    // retorna arrays numéricos (Number) prontos para Chart.js, usando Decimal para somas
-    const entradas = meses.map(m => {
-      const soma = transacoes
-        .filter(t => t.tipo === 'credito' && t.data.startsWith(m))
-        .reduce((acc, t) => acc.plus(new Decimal(String(t.valor))), new Decimal(0));
-      return Number(soma.toFixed(2));
-    });
-    const saidas = meses.map(m => {
-      const soma = transacoes
-        .filter(t => t.tipo === 'debito' && t.data.startsWith(m))
-        .reduce((acc, t) => acc.plus(new Decimal(String(t.valor))), new Decimal(0));
-      return Number(soma.toFixed(2));
-    });
-    const saldo = meses.map((_, i) => {
-      const s = entradas.slice(0, i+1).reduce((a,b) => a + b, 0) - saidas.slice(0, i+1).reduce((a,b) => a + b, 0);
-      return Number(new Decimal(s).toFixed(2));
-    });
-    return { entradas, saidas, saldo };
-  }
-
   function atualizarGraficos(transacoes) {
-    const meses = agruparMesesOrdenados(transacoes);
-    const { entradas, saidas, saldo } = criarDadosPorMes(transacoes, meses);
+    const meses = [...new Set(transacoes.map(t => t.data.slice(0, 7)))].sort();
+    const entradas = meses.map(m => transacoes.filter(t => t.tipo === 'credito' && t.data.startsWith(m)).reduce((acc, t) => acc + Number(t.valor), 0));
+    const saidas = meses.map(m => transacoes.filter(t => t.tipo === 'debito' && t.data.startsWith(m)).reduce((acc, t) => acc + Number(t.valor), 0));
+    const saldo = meses.map((_, i) => entradas.slice(0, i + 1).reduce((a, b) => a + b, 0) - saidas.slice(0, i + 1).reduce((a, b) => a + b, 0));
 
-    // destroy old charts if present
-    if (graficoEntradasSaidas) { graficoEntradasSaidas.destroy(); graficoEntradasSaidas = null; }
-    if (graficoSaldo) { graficoSaldo.destroy(); graficoSaldo = null; }
+    if (graficoEntradasSaidas) graficoEntradasSaidas.destroy();
+    if (graficoSaldo) graficoSaldo.destroy();
 
-    const ctx1 = document.getElementById("grafico-entradas-saidas").getContext("2d");
-    const ctx2 = document.getElementById("grafico-saldo").getContext("2d");
-
-    graficoEntradasSaidas = new Chart(ctx1, {
+    graficoEntradasSaidas = new Chart(document.getElementById("grafico-entradas-saidas").getContext("2d"), {
       type: 'bar',
       data: {
         labels: meses,
@@ -189,7 +158,7 @@
       options: { responsive: true, maintainAspectRatio: false }
     });
 
-    graficoSaldo = new Chart(ctx2, {
+    graficoSaldo = new Chart(document.getElementById("grafico-saldo").getContext("2d"), {
       type: 'line',
       data: {
         labels: meses,
@@ -212,51 +181,138 @@
     const fim = document.getElementById("filtro-data-fim").value;
     const tipo = document.getElementById("filtro-tipo").value;
 
-    // params: back-end deve aceitar inicio/fim (YYYY-MM-DD) e tipo
-    const params = { contaId: contaId ? Number(contaId) : null, inicio: inicio || null, fim: fim || null, tipo: tipo || null };
-    const transacoes = await window.profinanceAPI.queryTransacoes(params || {});
+    const params = { contaId: contaId || null, inicio: inicio || null, fim: fim || null, tipo: tipo || null };
+    const transacoes = await window.profinanceAPI.queryTransacoes(params);
 
-    // Totais com Decimal.js (precisão)
-    const totalCreditos = transacoes
-      .filter(t => t.tipo === 'credito')
-      .reduce((acc,t) => acc.plus(new Decimal(String(t.valor))), new Decimal(0));
-    const totalDebitos = transacoes
-      .filter(t => t.tipo === 'debito')
-      .reduce((acc,t) => acc.plus(new Decimal(String(t.valor))), new Decimal(0));
+    const totalCreditos = transacoes.filter(t => t.tipo === 'credito').reduce((acc, t) => acc.plus(new Decimal(t.valor)), new Decimal(0));
+    const totalDebitos = transacoes.filter(t => t.tipo === 'debito').reduce((acc, t) => acc.plus(new Decimal(t.valor)), new Decimal(0));
     const saldoFinal = totalCreditos.minus(totalDebitos);
 
-    document.getElementById("total-creditos").textContent = formatBRLDecimal(totalCreditos);
-    document.getElementById("total-debitos").textContent = formatBRLDecimal(totalDebitos);
-    document.getElementById("saldo-final").textContent = formatBRLDecimal(saldoFinal);
+    document.getElementById("total-creditos").textContent = formatBRL(totalCreditos);
+    document.getElementById("total-debitos").textContent = formatBRL(totalDebitos);
+    document.getElementById("saldo-final").textContent = formatBRL(saldoFinal);
 
-    // Gráficos (cria/destrói corretamente)
     atualizarGraficos(transacoes);
 
-    // Extrato detalhado (tabela)
     const tabelaExtrato = document.getElementById("tabela-extrato");
-    if (!transacoes || transacoes.length === 0) {
+    if (!transacoes.length) {
       tabelaExtrato.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">Nenhuma transação encontrada para o período.</td></tr>`;
     } else {
-      tabelaExtrato.innerHTML = transacoes.map(t => {
-        const dataFormatada = new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR');
-        const tipoLabel = t.tipo === 'credito' ? 'Crédito' : 'Débito';
-        const tipoClass = t.tipo === 'credito' ? 'text-green-600' : 'text-red-600';
-        return `
-          <tr class="hover:bg-gray-100 dark:hover:bg-gray-800">
-            <td>${dataFormatada}</td>
-            <td>${t.conta_nome || '-'}</td>
-            <td>${t.titulo}</td>
-            <td>${tipoLabel}</td>
-            <td class="text-right font-semibold ${tipoClass}">${formatBRLDecimal(new Decimal(String(t.valor)))}</td>
-          </tr>`;
-      }).join('');
+      tabelaExtrato.innerHTML = transacoes.map(t => `
+        <tr class="hover:bg-gray-100 dark:hover:bg-gray-800">
+          <td>${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+          <td>${t.conta_nome || '-'}</td>
+          <td>${t.titulo}</td>
+          <td>${t.tipo === 'credito' ? 'Crédito' : 'Débito'}</td>
+          <td class="text-right ${t.tipo === 'credito' ? 'text-green-600' : 'text-red-600'}">${formatBRL(t.valor)}</td>
+        </tr>`).join('');
     }
 
-    // rodapé do extrato
-    document.getElementById("extrato-total-creditos").textContent = formatBRLDecimal(totalCreditos);
-    document.getElementById("extrato-total-debitos").textContent = formatBRLDecimal(totalDebitos);
-    document.getElementById("extrato-saldo-final").textContent = formatBRLDecimal(saldoFinal);
+    document.getElementById("extrato-total-creditos").textContent = formatBRL(totalCreditos);
+    document.getElementById("extrato-total-debitos").textContent = formatBRL(totalDebitos);
+    document.getElementById("extrato-saldo-final").textContent = formatBRL(saldoFinal);
   }
+
+  // Exportar CSV
+  document.getElementById("btn-export-csv").addEventListener("click", () => {
+    const rows = [];
+    const table = document.querySelector("#tabela-extrato").closest("table");
+    for (let row of table.rows) {
+      const cols = Array.from(row.cells).map(c => `"${c.innerText}"`);
+      rows.push(cols.join(","));
+    }
+    const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "extrato.csv";
+    a.click();
+  });
+
+  // Exportar PDF
+document.getElementById("btn-export-pdf").addEventListener("click", () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.text("ProFinance - Relatório Financeiro", 14, 15);
+
+    // Seleciona a tabela original para extrair os totais
+    const tabelaOriginal = document.querySelector("#tabela-extrato").closest("table");
+    
+    // Captura os dados do rodapé dinamicamente
+    let totais = {};
+    const tfoot = tabelaOriginal.querySelector("tfoot");
+    if (tfoot) {
+        const rows = tfoot.querySelectorAll("tr");
+        if (rows.length >= 3) {
+            totais.creditos = rows[0].querySelector("td:last-child").textContent.trim();
+            totais.debitos = rows[1].querySelector("td:last-child").textContent.trim();
+            totais.saldo = rows[2].querySelector("td:last-child").textContent.trim();
+        }
+    }
+
+    // Clona a tabela original e remove o rodapé para a geração do PDF
+    const tabelaParaPDF = tabelaOriginal.cloneNode(true);
+    const tabelaRodapeClone = tabelaParaPDF.querySelector("tfoot");
+    if (tabelaRodapeClone) {
+        tabelaRodapeClone.remove();
+    }
+    
+    doc.autoTable({
+        html: tabelaParaPDF,
+        startY: 22,
+        willDrawCell: function (data) {
+            // Aplica estilos apenas na coluna Valor
+            if (data.column.index === 4) {
+                // Estiliza as linhas do corpo da tabela (transações)
+                if (data.section === 'body') {
+                    if (data.cell.raw.classList.contains('text-green-600')) {
+                        data.cell.styles.textColor = '#16a34a'; // Verde para créditos
+                    } else if (data.cell.raw.classList.contains('text-red-600')) {
+                        data.cell.styles.textColor = '#dc2626'; // Vermelho para débitos
+                    }
+                }
+            }
+        },
+        // Este gancho é executado uma única vez após a tabela ser desenhada
+        didDrawTable: (data) => {
+            const finalY = doc.autoTable.previous.finalY;
+
+            // Prepara os dados do rodapé para uma nova tabela
+            const footerData = [
+                ['Total Créditos:', totais.creditos],
+                ['Total Débitos:', totais.debitos],
+                ['Saldo Final:', totais.saldo]
+            ];
+
+            doc.autoTable({
+                body: footerData,
+                startY: finalY + 10,
+                theme: 'plain', // Estilo 'plain' para remover bordas e linhas
+                styles: {
+                    cellPadding: 0,
+                    fontSize: 10,
+                    textColor: [0, 0, 0] // Cor preta padrão
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', halign: 'right', cellWidth: 30 }, // Alinha a primeira coluna à direita
+                    1: { fontStyle: 'bold', halign: 'left', cellWidth: 30 } // Alinha a segunda coluna à esquerda
+                },
+                willDrawCell: (cellData) => {
+                    // Aplica as cores no rodapé da nova tabela
+                    if (cellData.row.index === 0) { // Créditos
+                        cellData.cell.styles.textColor = '#16a34a'; 
+                    } else if (cellData.row.index === 1) { // Débitos
+                        cellData.cell.styles.textColor = '#dc2626';
+                    } else if (cellData.row.index === 2) { // Saldo Final
+                        cellData.cell.styles.textColor = '#2563eb';
+                    }
+                }
+            });
+        }
+    });
+
+    doc.save("extrato.pdf");
+});
 
   document.getElementById("form-relatorio").addEventListener("submit", async (e) => {
     e.preventDefault();
