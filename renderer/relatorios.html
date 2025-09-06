@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Relatórios | ProFinance</title>
-  <link rel="stylesheet" href="output.css">
+  <link rel="stylesheet" href="output.css" />
   <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.3.1/decimal.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -12,10 +12,11 @@
   <script src="theme.js" defer></script>
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
-
   <!-- Navbar -->
   <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
-    <div class="flex items-center space-x-3"><img src="assets/profinance.svg" alt="ProFinance"></div>
+    <div class="flex items-center space-x-3">
+      <img src="assets/profinance.svg" alt="ProFinance" />
+    </div>
     <div class="hidden md:flex space-x-6">
       <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
       <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
@@ -38,9 +39,11 @@
     <!-- Filtros -->
     <div class="card mb-6 p-4 rounded shadow">
       <form id="form-relatorio" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <select id="filtro-conta" class="border rounded-lg p-2"><option value="">Todas as Contas</option></select>
-        <input id="filtro-data-inicio" class="border rounded-lg p-2" type="date">
-        <input id="filtro-data-fim" class="border rounded-lg p-2" type="date">
+        <select id="filtro-conta" class="border rounded-lg p-2">
+          <option value="">Todas as Contas</option>
+        </select>
+        <input id="filtro-data-inicio" class="border rounded-lg p-2" type="date" />
+        <input id="filtro-data-fim" class="border rounded-lg p-2" type="date" />
         <select id="filtro-tipo" class="border rounded-lg p-2">
           <option value="">Todos os Tipos</option>
           <option value="credito">Crédito</option>
@@ -213,106 +216,92 @@
     document.getElementById("extrato-saldo-final").textContent = formatBRL(saldoFinal);
   }
 
-  // Exportar CSV
-  document.getElementById("btn-export-csv").addEventListener("click", () => {
-    const rows = [];
-    const table = document.querySelector("#tabela-extrato").closest("table");
-    for (let row of table.rows) {
-      const cols = Array.from(row.cells).map(c => `"${c.innerText}"`);
-      rows.push(cols.join(","));
-    }
-    const blob = new Blob([rows.join("\n")], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "extrato.csv";
-    a.click();
-  });
-
-  // Exportar PDF
-document.getElementById("btn-export-pdf").addEventListener("click", () => {
+  // Exportar PDF corrigido
+  async function exportarPDF() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF("p", "pt", "a4");
 
-    doc.text("ProFinance - Relatório Financeiro", 14, 15);
+    doc.setFontSize(16);
+    doc.setTextColor(40);
+    doc.text("ProFinance - Relatório Financeiro", 40, 40);
 
-    // Seleciona a tabela original para extrair os totais
+    const dataAtual = new Date().toLocaleDateString("pt-BR");
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Gerado em: ${dataAtual}`, 40, 60);
+
     const tabelaOriginal = document.querySelector("#tabela-extrato").closest("table");
-    
-    // Captura os dados do rodapé dinamicamente
-    let totais = {};
+    const tabelaClonada = tabelaOriginal.cloneNode(true);
+    const rodapeClonado = tabelaClonada.querySelector("tfoot");
+    if (rodapeClonado) rodapeClonado.remove();
+
     const tfoot = tabelaOriginal.querySelector("tfoot");
+    let totais = { creditos: "R$ 0,00", debitos: "R$ 0,00", saldo: "R$ 0,00" };
     if (tfoot) {
-        const rows = tfoot.querySelectorAll("tr");
-        if (rows.length >= 3) {
-            totais.creditos = rows[0].querySelector("td:last-child").textContent.trim();
-            totais.debitos = rows[1].querySelector("td:last-child").textContent.trim();
-            totais.saldo = rows[2].querySelector("td:last-child").textContent.trim();
-        }
+      const rows = tfoot.querySelectorAll("tr");
+      totais.creditos = rows[0]?.querySelector("td:last-child")?.textContent || "R$ 0,00";
+      totais.debitos = rows[1]?.querySelector("td:last-child")?.textContent || "R$ 0,00";
+      totais.saldo = rows[2]?.querySelector("td:last-child")?.textContent || "R$ 0,00";
     }
 
-    // Clona a tabela original e remove o rodapé para a geração do PDF
-    const tabelaParaPDF = tabelaOriginal.cloneNode(true);
-    const tabelaRodapeClone = tabelaParaPDF.querySelector("tfoot");
-    if (tabelaRodapeClone) {
-        tabelaRodapeClone.remove();
-    }
-    
     doc.autoTable({
-        html: tabelaParaPDF,
-        startY: 22,
-        willDrawCell: function (data) {
-            // Aplica estilos apenas na coluna Valor
-            if (data.column.index === 4) {
-                // Estiliza as linhas do corpo da tabela (transações)
-                if (data.section === 'body') {
-                    if (data.cell.raw.classList.contains('text-green-600')) {
-                        data.cell.styles.textColor = '#16a34a'; // Verde para créditos
-                    } else if (data.cell.raw.classList.contains('text-red-600')) {
-                        data.cell.styles.textColor = '#dc2626'; // Vermelho para débitos
-                    }
-                }
-            }
-        },
-        // Este gancho é executado uma única vez após a tabela ser desenhada
-        didDrawTable: (data) => {
-            const finalY = doc.autoTable.previous.finalY;
-
-            // Prepara os dados do rodapé para uma nova tabela
-            const footerData = [
-                ['Total Créditos:', totais.creditos],
-                ['Total Débitos:', totais.debitos],
-                ['Saldo Final:', totais.saldo]
-            ];
-
-            doc.autoTable({
-                body: footerData,
-                startY: finalY + 10,
-                theme: 'plain', // Estilo 'plain' para remover bordas e linhas
-                styles: {
-                    cellPadding: 0,
-                    fontSize: 10,
-                    textColor: [0, 0, 0] // Cor preta padrão
-                },
-                columnStyles: {
-                    0: { fontStyle: 'bold', halign: 'right', cellWidth: 30 }, // Alinha a primeira coluna à direita
-                    1: { fontStyle: 'bold', halign: 'left', cellWidth: 30 } // Alinha a segunda coluna à esquerda
-                },
-                willDrawCell: (cellData) => {
-                    // Aplica as cores no rodapé da nova tabela
-                    if (cellData.row.index === 0) { // Créditos
-                        cellData.cell.styles.textColor = '#16a34a'; 
-                    } else if (cellData.row.index === 1) { // Débitos
-                        cellData.cell.styles.textColor = '#dc2626';
-                    } else if (cellData.row.index === 2) { // Saldo Final
-                        cellData.cell.styles.textColor = '#2563eb';
-                    }
-                }
-            });
+      html: tabelaClonada,
+      startY: 80,
+      theme: "grid",
+      styles: { fontSize: 10, cellPadding: 5 },
+      headStyles: {
+        fillColor: [33, 37, 41],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+      },
+      bodyStyles: { textColor: [0, 0, 0] },
+      didParseCell: function (data) {
+        if (data.section === "body" && data.column.index === 4) {
+          const valor = data.cell.text[0] || "";
+          if (valor.startsWith("-")) {
+            data.cell.styles.textColor = [220, 53, 69];
+          } else {
+            data.cell.styles.textColor = [25, 135, 84];
+          }
         }
+      },
     });
 
-    doc.save("extrato.pdf");
-});
+    const posFinal = doc.autoTable.previous.finalY + 20;
+
+    doc.setFontSize(12);
+    doc.setFont(undefined, "bold");
+
+    doc.setTextColor(22, 163, 74);
+    doc.text(`Total Créditos: ${totais.creditos}`, 40, posFinal);
+
+    doc.setTextColor(220, 53, 69);
+    doc.text(`Total Débitos: ${totais.debitos}`, 40, posFinal + 20);
+
+    doc.setTextColor(37, 99, 235);
+    doc.text(`Saldo Final: ${totais.saldo}`, 40, posFinal + 40);
+
+    doc.save("relatorio_financeiro.pdf");
+  }
+
+  document.getElementById("btn-export-pdf").addEventListener("click", exportarPDF);
+
+  document.getElementById("btn-export-csv").addEventListener("click", () => {
+    const table = document.querySelector("#tabela-extrato").closest("table");
+    let csv = [];
+    const rows = table.querySelectorAll("tr");
+    for (let row of rows) {
+      let cols = row.querySelectorAll("td, th");
+      let data = [];
+      cols.forEach(col => data.push(`"${col.innerText}"`));
+      csv.push(data.join(","));
+    }
+    const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(csvFile);
+    link.download = "relatorio_financeiro.csv";
+    link.click();
+  });
 
   document.getElementById("form-relatorio").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -324,12 +313,20 @@ document.getElementById("btn-export-pdf").addEventListener("click", () => {
     document.getElementById("filtro-data-inicio").value = "";
     document.getElementById("filtro-data-fim").value = "";
     document.getElementById("filtro-tipo").value = "";
-    await carregarRelatorio();
+    document.getElementById("tabela-extrato").innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">Nenhuma transação encontrada para o período.</td></tr>`;
+    document.getElementById("total-creditos").textContent = "R$ 0,00";
+    document.getElementById("total-debitos").textContent = "R$ 0,00";
+    document.getElementById("saldo-final").textContent = "R$ 0,00";
+    document.getElementById("extrato-total-creditos").textContent = "R$ 0,00";
+    document.getElementById("extrato-total-debitos").textContent = "R$ 0,00";
+    document.getElementById("extrato-saldo-final").textContent = "R$ 0,00";
+    if (graficoEntradasSaidas) graficoEntradasSaidas.destroy();
+    if (graficoSaldo) graficoSaldo.destroy();
   });
 
   document.addEventListener("DOMContentLoaded", async () => {
     await carregarContas();
-    await carregarRelatorio();
+    // Relatório não carrega automaticamente
   });
 </script>
 </body>
