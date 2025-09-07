@@ -6,19 +6,13 @@
 <title>Configurações | ProFinance</title>
 <link rel="stylesheet" href="output.css">
 <script src="theme.js" defer></script>
-
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
-<!-- 🔹 Navbar Global -->
+<!-- Navbar -->
 <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
-
-  
-  <!-- 🔹 Logo -->
   <div class="flex items-center space-x-3">
     <img src="assets/profinance.svg" alt="ProFinance">
   </div>
-
-  <!-- 🔹 Links de Navegação -->
   <div class="hidden md:flex space-x-6">
     <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
     <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
@@ -26,20 +20,16 @@
     <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
     <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
   </div>
-
-  <!-- 🔹 Botão Menu Mobile -->
   <div class="md:hidden">
     <button id="menu-btn" class="text-white focus:outline-none">
-      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2"
-        viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M4 6h16M4 12h16m-7 6h7"></path>
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
       </svg>
     </button>
   </div>
 </nav>
 
-<!-- 🔹 Menu Mobile -->
+<!-- Mobile menu -->
 <div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
   <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
   <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
@@ -48,24 +38,47 @@
   <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
 </div>
 
-<script>
-  // Toggle Menu Mobile
-  const menuBtn = document.getElementById("menu-btn");
-  const mobileMenu = document.getElementById("mobile-menu");
+<main class="container mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-6">Configurações do Sistema</h1>
 
-  menuBtn.addEventListener("click", () => {
-    mobileMenu.classList.toggle("hidden");
-  });
-</script>
+  <div class="card mb-6 p-4 rounded shadow">
+    <h2 class="text-lg font-semibold mb-2">Preferências</h2>
+    <label class="flex items-center gap-2">
+      <input type="checkbox" id="toggle-tema" class="form-checkbox">
+      <span>Tema Escuro</span>
+    </label>
+  </div>
+
+  <div class="card mb-6 p-4 rounded shadow">
+    <h2 class="text-lg font-semibold mb-2">Backup e Restauração</h2>
+    <div class="flex gap-3">
+      <button id="btn-backup" class="button-primary">Fazer Backup</button>
+      <button id="btn-restore" class="button-danger">Restaurar Backup</button>
+    </div>
+    <p class="mt-3 text-sm text-gray-600">O backup salva uma cópia do arquivo de banco de dados em /backups com a data/hora no nome.</p>
+  </div>
+
+  <div class="card p-4 rounded shadow">
+    <h2 class="text-lg font-semibold mb-2">Sobre o Sistema</h2>
+    <p>ProFinance v1.0</p>
+    <p>Desenvolvido por Ricardo Goulart</p>
+  </div>
+</main>
+
 <script>
+  // Menu mobile
+  (function(){
+    const menuBtn = document.getElementById('menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (menuBtn && mobileMenu) menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+  })();
+
+  // Tema
   const toggleTema = document.getElementById("toggle-tema");
-
-  // Carrega o estado salvo
   if (localStorage.getItem("theme") === "dark") {
     document.documentElement.classList.add("dark");
     toggleTema.checked = true;
   }
-
   toggleTema.addEventListener("change", () => {
     if (toggleTema.checked) {
       document.documentElement.classList.add("dark");
@@ -75,42 +88,77 @@
       localStorage.setItem("theme", "light");
     }
   });
-</script>
 
-
-<script>
-  async function carregarContas() {
-    const contas = await window.profinanceAPI.listarContas();
-    console.log("Contas:", contas);
+  // Toast helper
+  function showToast(text, type = 'info') {
+    let t = document.getElementById('__toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = '__toast';
+      t.className = 'fixed right-5 bottom-5 z-[9999] flex flex-col items-end gap-2';
+      document.body.appendChild(t);
+    }
+    const el = document.createElement('div');
+    el.className = 'p-3 rounded-lg shadow-lg text-white font-medium';
+    if (type === 'success') el.style.background = '#10B981';
+    else if (type === 'info') el.style.background = '#3B82F6';
+    else el.style.background = '#EF4444';
+    el.innerText = text;
+    t.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.4s'; setTimeout(()=> el.remove(), 400); }, 3500);
   }
 
-  document.addEventListener("DOMContentLoaded", carregarContas);
+  // Backup
+  document.getElementById('btn-backup').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-backup');
+    btn.disabled = true;
+    btn.textContent = 'Fazendo backup...';
+    try {
+      const res = await window.profinanceAPI.fazerBackup();
+      if (res && res.success) {
+        showToast('Backup criado em: ' + res.path, 'success');
+      } else {
+        showToast('Erro ao fazer backup: ' + (res.message || 'erro desconhecido'), 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao fazer backup: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Fazer Backup';
+    }
+  });
+
+  // Restauração
+  document.getElementById('btn-restore').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-restore');
+    if (!confirm('Restaurar backup substituirá o banco de dados atual. Deseja continuar?')) return;
+    btn.disabled = true;
+    btn.textContent = 'Restaurando...';
+    try {
+      const res = await window.profinanceAPI.restaurarBackup();
+      if (res && res.success) {
+        showToast('Backup restaurado: ' + res.path, 'success');
+        // solicitar reload dos dados nas outras janelas (main.js envia 'contas-atualizadas')
+      } else {
+        // usuário pode ter cancelado o diálogo
+        showToast('Restauração cancelada ou falhou: ' + (res.message || 'cancelado'), 'info');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao restaurar backup: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Restaurar Backup';
+    }
+  });
+
+  // Se main enviar evento, por exemplo após restaurar, mostramos um aviso (e o frontend pode recarregar)
+  if (window.profinanceAPI && window.profinanceAPI.onContasAtualizadas) {
+    window.profinanceAPI.onContasAtualizadas(() => {
+      showToast('Dados atualizados (restauração aplicada). Recarregue as páginas para ver as mudanças.', 'info');
+    });
+  }
 </script>
-
-
-<div class="container">
-<h1 class="text-2xl font-bold mb-6">Configurações do Sistema</h1>
-
-
-<div class="card mb-6">
-<h2 class="text-lg font-semibold mb-2">Preferências</h2>
-<label class="flex items-center gap-2">
-  <input type="checkbox" id="toggle-tema" class="form-checkbox">
-  <span>Tema Escuro</span>
-</label>
-
-</div>
-
-
-<div class="card mb-6">
-<h2 class="text-lg font-semibold mb-2">Backup e Restauração</h2>
-<button class="button-primary mr-4">Fazer Backup</button>
-<button class="button-danger">Restaurar Backup</button>
-</div>
-
-
-<div class="card">
-<h2 class="text-lg font-semibold mb-2">Sobre o Sistema</h2>
-<p>ProFinance v1.0</p>
-<p>Desenvolvido por Ricardo Goulart</p>
+</body>
 </html>

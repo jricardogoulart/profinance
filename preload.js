@@ -23,5 +23,13 @@ contextBridge.exposeInMainWorld("profinanceAPI", {
   setConfig: (config) => ipcRenderer.invoke("set-config", config),
 
   // Eventos
-  onContasAtualizadas: (callback) => ipcRenderer.on("contas-atualizadas", callback)
-});
+  onContasAtualizadas: (callback) => ipcRenderer.on("contas-atualizadas", callback),
+
+  //  Backup
+  criarBackup: () => ipcRenderer.invoke("backup-criar"),
+  restaurarBackup: (caminho) => ipcRenderer.invoke("backup-restaurar", caminho),
+  selecionarBackup: () => ipcRenderer.invoke("backup-selecionar"),
+  fazerBackup: () => ipcRenderer.invoke("fazer-backup"),
+restaurarBackup: () => ipcRenderer.invoke("restaurar-backup"),
+
+}); 

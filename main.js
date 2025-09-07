@@ -1,62 +1,29 @@
-// ============================================================
-// 📌 ProFinance - Main Process
-// ============================================================
-
-const { app, BrowserWindow, ipcMain } = require("electron");
+// main.js
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
+const fs = require("fs");
 const Database = require("better-sqlite3");
-const Decimal = require("decimal.js");
 
-// ============================================================
-// 📌 Configuração do Banco de Dados
-// ============================================================
-const dbPath = path.join(__dirname, "profinance.db");
-const db = new Database(dbPath);
+// Caminho do banco de dados
+const dbPath = path.join(__dirname, "..", "profinance.db");
+let db;
 
-// ============================================================
-// 📌 Criação da Janela Principal
-// ============================================================
-let mainWindow;
-
-function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    title: "ProFinance",
-    icon: path.join(__dirname, "renderer/assets/profinanceicon.ico"),
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"), // <-- Corrigido
-      nodeIntegration: false,
-      contextIsolation: true,
-    },
-  });
-
-  mainWindow.loadFile(path.join(__dirname, "renderer/dashboard.html"));
-
-  mainWindow.on("closed", () => {
-    mainWindow = null;
-  });
+// Função para abrir (ou reabrir) a conexão com o DB
+function openDatabase() {
+  try {
+    if (db) {
+      try { db.close(); } catch (e) { console.warn("Erro fechando DB anterior:", e); }
+    }
+    db = new Database(dbPath);
+  } catch (err) {
+    console.error("Erro ao abrir banco:", err);
+    throw err;
+  }
 }
 
-// ============================================================
-// 📌 Inicialização do App
-// ============================================================
-app.whenReady().then(() => {
-  console.log("🚀 ProFinance iniciado com sucesso!");
-  createWindow();
+// Inicializa o DB (abre e cria tabelas se não existirem)
+openDatabase();
 
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
-});
-
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
-
-// ============================================================
-// 📌 Criação das Tabelas (caso não existam)
-// ============================================================
 db.prepare(`
   CREATE TABLE IF NOT EXISTS contas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,16 +47,38 @@ db.prepare(`
   )
 `).run();
 
-// ============================================================
-// 📌 Função Auxiliar para Precisão com Decimal.js
-// ============================================================
-function toDecimal(value) {
-  return new Decimal(value || 0);
+let mainWindow;
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    icon: path.join(__dirname, "renderer/assets/", "profinanceicon.ico"),
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),  
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  });
+
+  mainWindow.loadFile(path.join(__dirname, "renderer/dashboard.html"));
+  mainWindow.on("closed", () => (mainWindow = null));
 }
 
-// ============================================================
-// 📌 IPC - Contas
-// ============================================================
+app.whenReady().then(() => {
+  createWindow();
+
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
+});
+
+//
+// IPC - CONTAS
+//
 ipcMain.handle("get-contas", async () => {
   return db.prepare("SELECT * FROM contas").all();
 });
@@ -99,16 +88,22 @@ ipcMain.handle("add-conta", async (_, conta) => {
     INSERT INTO contas (nome, banco, agencia, numero, saldo)
     VALUES (?, ?, ?, ?, ?)
   `);
-
   const result = stmt.run(
     conta.nome,
     conta.banco,
     conta.agencia,
     conta.numero,
-    toDecimal(conta.saldo).toNumber()
+    conta.saldo || 0
   );
-
+  // opcional: notificar renderer
+  if (mainWindow) mainWindow.webContents.send("contas-atualizadas");
   return { id: result.lastInsertRowid, ...conta };
+});
+
+ipcMain.handle("delete-conta", async (_, id) => {
+  db.prepare("DELETE FROM contas WHERE id = ?").run(id);
+  if (mainWindow) mainWindow.webContents.send("contas-atualizadas");
+  return { success: true };
 });
 
 ipcMain.handle("update-conta", async (_, conta) => {
@@ -117,44 +112,24 @@ ipcMain.handle("update-conta", async (_, conta) => {
     SET nome = ?, banco = ?, agencia = ?, numero = ?, saldo = ?
     WHERE id = ?
   `);
-
-  stmt.run(
-    conta.nome,
-    conta.banco,
-    conta.agencia,
-    conta.numero,
-    toDecimal(conta.saldo).toNumber(),
-    conta.id
-  );
-
+  stmt.run(conta.nome, conta.banco, conta.agencia, conta.numero, conta.saldo, conta.id);
+  if (mainWindow) mainWindow.webContents.send("contas-atualizadas");
   return { success: true };
 });
 
-ipcMain.handle("delete-conta", async (_, id) => {
-  db.prepare("DELETE FROM contas WHERE id = ?").run(id);
-  return { success: true };
-});
-
-// ============================================================
-// 📌 IPC - Transações
-// ============================================================
-
-// Listar transações por conta
+//
+// IPC - TRANSAÇÕES
+//
 ipcMain.handle("get-transacoes", async (_, contaId) => {
-  return db
-    .prepare(
-      `
-      SELECT t.*, c.nome AS conta_nome
-      FROM transacoes t
-      JOIN contas c ON c.id = t.conta_id
-      WHERE t.conta_id = ?
-      ORDER BY date(t.data) DESC
-    `
-    )
-    .all(contaId);
+  return db.prepare(`
+    SELECT t.*, c.nome AS conta_nome
+    FROM transacoes t
+    JOIN contas c ON c.id = t.conta_id
+    WHERE t.conta_id = ?
+    ORDER BY date(t.data) DESC
+  `).all(contaId);
 });
 
-// Buscar últimas 10 movimentações
 ipcMain.handle("get-ultimas-movimentacoes", async () => {
   return db.prepare(`
     SELECT t.id, t.data, t.titulo, t.tipo, t.valor, c.nome AS conta_nome
@@ -165,7 +140,6 @@ ipcMain.handle("get-ultimas-movimentacoes", async () => {
   `).all();
 });
 
-// Adicionar transação
 ipcMain.handle("add-transacao", async (_, transacao) => {
   const stmt = db.prepare(`
     INSERT INTO transacoes (conta_id, titulo, valor, tipo, data)
@@ -175,90 +149,55 @@ ipcMain.handle("add-transacao", async (_, transacao) => {
   stmt.run(
     transacao.conta_id,
     transacao.titulo,
-    toDecimal(transacao.valor).toNumber(),
+    transacao.valor,
     transacao.tipo,
     transacao.data
   );
 
-  // Atualiza saldo da conta com precisão
-  const delta = transacao.tipo === "credito"
-    ? toDecimal(transacao.valor)
-    : toDecimal(transacao.valor).negated();
-
+  // Atualiza saldo da conta
   db.prepare("UPDATE contas SET saldo = saldo + ? WHERE id = ?").run(
-    delta.toNumber(),
+    transacao.tipo === "credito" ? transacao.valor : -transacao.valor,
     transacao.conta_id
   );
 
+  if (mainWindow) mainWindow.webContents.send("contas-atualizadas");
   return { success: true };
 });
 
-// Atualizar transação
+ipcMain.handle("delete-transacao", async (_, id) => {
+  const transacao = db.prepare("SELECT valor, tipo, conta_id FROM transacoes WHERE id = ?").get(id);
+
+  if (transacao) {
+    const delta = transacao.tipo === "credito" ? -transacao.valor : transacao.valor;
+    db.prepare("UPDATE contas SET saldo = saldo + ? WHERE id = ?").run(delta, transacao.conta_id);
+  }
+
+  db.prepare("DELETE FROM transacoes WHERE id = ?").run(id);
+  if (mainWindow) mainWindow.webContents.send("contas-atualizadas");
+  return { success: true };
+});
+
 ipcMain.handle("update-transacao", async (_, transacao) => {
   const old = db.prepare("SELECT valor, tipo, conta_id FROM transacoes WHERE id = ?").get(transacao.id);
   if (!old) return { success: false, message: "Transação não encontrada" };
 
-  // Reverte saldo anterior
-  const deltaAnterior = old.tipo === "credito"
-    ? toDecimal(old.valor).negated()
-    : toDecimal(old.valor);
+  const deltaAnterior = old.tipo === "credito" ? -old.valor : old.valor;
+  db.prepare("UPDATE contas SET saldo = saldo + ? WHERE id = ?").run(deltaAnterior, old.conta_id);
 
-  db.prepare("UPDATE contas SET saldo = saldo + ? WHERE id = ?").run(
-    deltaAnterior.toNumber(),
-    old.conta_id
-  );
-
-  // Atualiza transação
   db.prepare(`
     UPDATE transacoes
     SET titulo = ?, valor = ?, tipo = ?, data = ?, conta_id = ?
     WHERE id = ?
-  `).run(
-    transacao.titulo,
-    toDecimal(transacao.valor).toNumber(),
-    transacao.tipo,
-    transacao.data,
-    transacao.conta_id,
-    transacao.id
-  );
+  `).run(transacao.titulo, transacao.valor, transacao.tipo, transacao.data, transacao.conta_id, transacao.id);
 
-  // Aplica novo saldo
-  const deltaNovo = transacao.tipo === "credito"
-    ? toDecimal(transacao.valor)
-    : toDecimal(transacao.valor).negated();
+  const deltaNovo = transacao.tipo === "credito" ? transacao.valor : -transacao.valor;
+  db.prepare("UPDATE contas SET saldo = saldo + ? WHERE id = ?").run(deltaNovo, transacao.conta_id);
 
-  db.prepare("UPDATE contas SET saldo = saldo + ? WHERE id = ?").run(
-    deltaNovo.toNumber(),
-    transacao.conta_id
-  );
-
+  if (mainWindow) mainWindow.webContents.send("contas-atualizadas");
   return { success: true };
 });
 
-// Excluir transação
-ipcMain.handle("delete-transacao", async (_, id) => {
-  const transacao = db
-    .prepare("SELECT valor, tipo, conta_id FROM transacoes WHERE id = ?")
-    .get(id);
-
-  if (transacao) {
-    const delta = transacao.tipo === "credito"
-      ? toDecimal(transacao.valor).negated()
-      : toDecimal(transacao.valor);
-
-    db.prepare("UPDATE contas SET saldo = saldo + ? WHERE id = ?").run(
-      delta.toNumber(),
-      transacao.conta_id
-    );
-  }
-
-  db.prepare("DELETE FROM transacoes WHERE id = ?").run(id);
-  return { success: true };
-});
-
-// ============================================================
-// 📌 IPC - Filtros e Relatórios
-// ============================================================
+// Query com filtros (usado por transacoes.html / relatorios.html)
 ipcMain.handle("query-transacoes", async (_, params = {}) => {
   const { contaId, tipo, inicio, fim } = params;
   let where = [];
@@ -293,15 +232,72 @@ ipcMain.handle("query-transacoes", async (_, params = {}) => {
   return db.prepare(sql).all(...args);
 });
 
-// ============================================================
-// 📌 IPC - Saldo Consolidado
-// ============================================================
 ipcMain.handle("get-saldo-consolidado", async () => {
-  const row = db.prepare(`
-    SELECT
-      IFNULL(SUM(CASE WHEN tipo = 'credito' THEN valor ELSE -valor END), 0) AS saldo_total
-    FROM transacoes
-  `).get();
+  try {
+    const row = db.prepare(`
+      SELECT
+        IFNULL(SUM(CASE WHEN tipo = 'credito' THEN valor ELSE -valor END), 0) AS saldo_total
+      FROM transacoes
+    `).get();
 
-  return toDecimal(row.saldo_total).toNumber();
+    return row.saldo_total || 0;
+  } catch (error) {
+    console.error("Erro ao calcular saldo consolidado:", error);
+    return 0;
+  }
+});
+
+//
+// Backup / Restauração
+//
+ipcMain.handle("fazer-backup", async () => {
+  try {
+    const backupsDir = path.join(__dirname, "..", "backups");
+    if (!fs.existsSync(backupsDir)) fs.mkdirSync(backupsDir, { recursive: true });
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const dest = path.join(backupsDir, `profinance-backup-${timestamp}.db`);
+    await fs.promises.copyFile(dbPath, dest);
+    return { success: true, path: dest };
+  } catch (err) {
+    console.error("Erro ao fazer backup:", err);
+    return { success: false, message: err.message || String(err) };
+  }
+});
+
+ipcMain.handle("restaurar-backup", async () => {
+  try {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: "Selecionar arquivo de backup",
+      buttonLabel: "Restaurar",
+      properties: ["openFile"],
+      filters: [
+        { name: "Backups", extensions: ["db", "sqlite", "sqlite3"] },
+        { name: "Todos", extensions: ["*"] }
+      ]
+    });
+
+    if (result.canceled || !result.filePaths.length) {
+      return { success: false, message: "Operação cancelada." };
+    }
+
+    const filePath = result.filePaths[0];
+
+    // Fechar DB atual, substituir arquivo e reabrir
+    try { if (db) db.close(); } catch (e) { console.warn("Erro fechando DB:", e); }
+
+    await fs.promises.copyFile(filePath, dbPath);
+
+    // Reabrir DB
+    openDatabase();
+
+    // Notifica renderers para recarregarem dados
+    if (mainWindow) {
+      mainWindow.webContents.send("contas-atualizadas");
+    }
+
+    return { success: true, path: filePath };
+  } catch (err) {
+    console.error("Erro ao restaurar backup:", err);
+    return { success: false, message: err.message || String(err) };
+  }
 });
