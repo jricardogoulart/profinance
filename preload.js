@@ -8,28 +8,17 @@ contextBridge.exposeInMainWorld("profinanceAPI", {
   atualizarConta: (conta) => ipcRenderer.invoke("update-conta", conta),
 
   // Transações
-  listarMovimentacoes: (contaId) => ipcRenderer.invoke("get-transacoes", contaId),
-  queryTransacoes: (params) => ipcRenderer.invoke("query-transacoes", params),
+  listarTransacoes: (contaId) => ipcRenderer.invoke("get-transacoes", contaId),
   listarUltimasMovimentacoes: () => ipcRenderer.invoke("get-ultimas-movimentacoes"),
   addTransacao: (transacao) => ipcRenderer.invoke("add-transacao", transacao),
   excluirTransacao: (id) => ipcRenderer.invoke("delete-transacao", id),
   atualizarTransacao: (transacao) => ipcRenderer.invoke("update-transacao", transacao),
+  queryTransacoes: (params) => ipcRenderer.invoke("query-transacoes", params),
 
-  // Saldo consolidado
+  // Relatórios
   getSaldoConsolidado: () => ipcRenderer.invoke("get-saldo-consolidado"),
 
-  // Configurações
-  getConfig: () => ipcRenderer.invoke("get-config"),
-  setConfig: (config) => ipcRenderer.invoke("set-config", config),
-
-  // Eventos
-  onContasAtualizadas: (callback) => ipcRenderer.on("contas-atualizadas", callback),
-
-  //  Backup
-  criarBackup: () => ipcRenderer.invoke("backup-criar"),
-  restaurarBackup: (caminho) => ipcRenderer.invoke("backup-restaurar", caminho),
-  selecionarBackup: () => ipcRenderer.invoke("backup-selecionar"),
+  // Backup
   fazerBackup: () => ipcRenderer.invoke("fazer-backup"),
-restaurarBackup: () => ipcRenderer.invoke("restaurar-backup"),
-
-}); 
+  restaurarBackup: () => ipcRenderer.invoke("restaurar-backup")
+});

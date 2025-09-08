@@ -1,147 +1,78 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard | ProFinance</title>
-  <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
   <link rel="stylesheet" href="output.css">
-  <script src="theme.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.3.1/decimal.min.js"></script>
+  <script src="./renderer.js" defer></script>
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
-  <!-- Navbar -->
-  <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
-    <div class="flex items-center space-x-3">
-      <img src="assets/profinance.svg" alt="ProFinance" />
-    </div>
 
-    <div class="hidden md:flex space-x-6">
-      <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
-      <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
-      <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
-      <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
-      <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
-    </div>
+<!-- Navbar -->
+<nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+  <div class="flex items-center space-x-3">
+    <img src="assets/profinance.svg" alt="ProFinance" />
+  </div>
+  <div class="hidden md:flex space-x-6">
+    <a href="dashboard.html" class="text-gray-300 hover:text-white font-bold">Dashboard</a>
+    <a href="contas.html" class="text-gray-300 hover:text-white">Contas</a>
+    <a href="transacoes.html" class="text-gray-300 hover:text-white">Transações</a>
+    <a href="relatorios.html" class="text-gray-300 hover:text-white">Relatórios</a>
+    <a href="configuracoes.html" class="text-gray-300 hover:text-white">Configurações</a>
+  </div>
+  <div class="md:hidden">
+    <button id="menu-btn" class="text-white focus:outline-none">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
+      </svg>
+    </button>
+  </div>
+</nav>
 
-    <div class="md:hidden">
-      <button id="menu-btn" class="text-white focus:outline-none">
-        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
-        </svg>
-      </button>
-    </div>
-  </nav>
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
+  <a href="dashboard.html" class="text-gray-300 font-bold">Dashboard</a>
+  <a href="contas.html" class="text-gray-300">Contas</a>
+  <a href="transacoes.html" class="text-gray-300">Transações</a>
+  <a href="relatorios.html" class="text-gray-300">Relatórios</a>
+  <a href="configuracoes.html" class="text-gray-300">Configurações</a>
+</div>
 
-  <!-- Mobile menu -->
-  <div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
-    <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
-    <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
-    <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
-    <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
-    <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
+<main class="container mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-6">Dashboard Financeiro</h1>
+
+  <!-- Cards das Contas -->
+  <div id="cards-contas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+  <!-- Saldo Consolidado -->
+  <div class="card mt-6 p-4 rounded shadow">
+    <h2 class="text-lg font-semibold">Saldo Consolidado</h2>
+    <p id="saldo-consolidado" class="text-3xl font-bold text-green-600 mt-2">R$ 0,00</p>
   </div>
 
-  <main class="container mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-6">Dashboard Financeiro</h1>
-
-    <!-- Cards das Contas -->
-    <div id="cards-contas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-
-    <!-- Saldo Consolidado -->
-    <div class="card mt-6 p-4 rounded shadow">
-      <h2 class="text-lg font-semibold">Saldo Consolidado</h2>
-      <p id="saldo-consolidado" class="text-3xl font-bold text-green-600 mt-2">R$ 0,00</p>
+  <!-- Últimas Movimentações -->
+  <div class="card mt-6 p-4 rounded shadow">
+    <h2 class="text-lg font-semibold mb-4">Últimas Movimentações</h2>
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Conta</th>
+            <th>Título</th>
+            <th class="text-center">Tipo</th>
+            <th class="text-right">Valor</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-movimentacoes">
+          <tr><td colspan="5" class="text-center text-gray-500">Nenhuma movimentação encontrada.</td></tr>
+        </tbody>
+      </table>
     </div>
+  </div>
+</main>
 
-    <!-- Últimas Movimentações -->
-    <div class="card mt-6 p-4 rounded shadow">
-      <h2 class="text-lg font-semibold mb-4">Últimas Movimentações</h2>
-      <div class="overflow-x-auto">
-        <table class="table w-full">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Conta</th>
-              <th>Título</th>
-              <th class="text-center">Tipo</th>
-              <th class="text-right">Valor</th>
-            </tr>
-          </thead>
-          <tbody id="tabela-movimentacoes"></tbody>
-        </table>
-      </div>
-    </div>
-  </main>
-
-  <script>
-    (() => {
-      const menuBtn = document.getElementById("menu-btn");
-      const mobileMenu = document.getElementById("mobile-menu");
-      if (menuBtn && mobileMenu) {
-        menuBtn.addEventListener("click", () => {
-          mobileMenu.classList.toggle("hidden");
-        });
-      }
-    })();
-
-    async function carregarDashboard() {
-      try {
-        const cardsContainer = document.getElementById("cards-contas");
-        const saldoConsolidadoEl = document.getElementById("saldo-consolidado");
-        const tabelaMov = document.getElementById("tabela-movimentacoes");
-        const contas = await window.profinanceAPI.listarContas();
-
-        if (!contas || contas.length === 0) {
-          cardsContainer.innerHTML = `
-            <div class="col-span-full text-center text-gray-500">
-              Nenhuma conta cadastrada.
-            </div>`;
-          saldoConsolidadoEl.textContent = "R$ 0,00";
-          tabelaMov.innerHTML = "";
-          return;
-        }
-
-        cardsContainer.innerHTML = contas.map(conta => `
-          <div class="card shadow-md hover:shadow-lg transition p-4 rounded bg-white dark:bg-gray-800">
-            <h3 class="text-lg font-semibold">${conta.nome}</h3>
-            <p>${conta.banco || ""}</p>
-            <p class="mt-2 text-blue-600 font-bold">
-              Saldo atual: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(conta.saldo || 0))}
-            </p>
-            <button onclick="verTransacoes(${conta.id})" class="mt-4 button-primary w-full">Ver Transações</button>
-          </div>
-        `).join("");
-
-        const saldoConsolidado = contas.reduce((acc, c) => acc + Number(c.saldo || 0), 0);
-        saldoConsolidadoEl.textContent = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(saldoConsolidado);
-
-        const movs = await window.profinanceAPI.listarUltimasMovimentacoes();
-        tabelaMov.innerHTML = (movs || []).map(m => {
-          const isCredito = m.tipo === "credito";
-          const bgClass = isCredito ? "bg-green-600" : "bg-red-600";
-          const tipoLabel = isCredito ? "Crédito" : "Débito";
-          const valorText = `${isCredito ? "" : "-"}${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(m.valor)}`;
-          return `
-            <tr>
-              <td>${m.data || ""}</td>
-              <td>${m.conta_nome || ""}</td>
-              <td>${m.titulo || ""}</td>
-              <td class="px-2 py-1 ${bgClass} text-white rounded text-center">${tipoLabel}</td>
-              <td class="text-right font-semibold">${valorText}</td>
-            </tr>
-          `;
-        }).join("");
-      } catch (error) {
-        console.error("Erro ao carregar dashboard:", error);
-      }
-    }
-
-    function verTransacoes(contaId) {
-      window.location.href = `transacoes.html?conta=${contaId}`;
-    }
-
-    document.addEventListener("DOMContentLoaded", carregarDashboard);
-  </script>
 </body>
 </html>

@@ -4,262 +4,113 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contas Bancárias | ProFinance</title>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
   <link rel="stylesheet" href="output.css">
-  <script src="theme.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.3.1/decimal.min.js"></script>
+  <script src="./renderer.js" defer></script>
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
-  <!-- Navbar -->
-  <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
-    <div class="flex items-center space-x-3">
-      <img src="assets/profinance.svg" alt="ProFinance">
-    </div>
-    <div class="hidden md:flex space-x-6">
-      <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
-      <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
-      <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
-      <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
-      <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
-    </div>
-    <div class="md:hidden">
-      <button id="menu-btn" class="text-white focus:outline-none">
-        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
-        </svg>
-      </button>
-    </div>
-  </nav>
 
-  <!-- Menu Mobile -->
-  <div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
-    <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
-    <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
-    <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
-    <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
-    <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
+<!-- Navbar -->
+<nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+  <div class="flex items-center space-x-3">
+    <img src="assets/profinance.svg" alt="ProFinance" />
   </div>
+  <div class="hidden md:flex space-x-6">
+    <a href="dashboard.html" class="text-gray-300 hover:text-white">Dashboard</a>
+    <a href="contas.html" class="text-gray-300 hover:text-white font-bold">Contas</a>
+    <a href="transacoes.html" class="text-gray-300 hover:text-white">Transações</a>
+    <a href="relatorios.html" class="text-gray-300 hover:text-white">Relatórios</a>
+    <a href="configuracoes.html" class="text-gray-300 hover:text-white">Configurações</a>
+  </div>
+  <div class="md:hidden">
+    <button id="menu-btn" class="text-white focus:outline-none">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
+      </svg>
+    </button>
+  </div>
+</nav>
 
-  <main class="container mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-6">Cadastro de Contas Bancárias</h1>
+<!-- Mobile menu -->
+<div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
+  <a href="dashboard.html" class="text-gray-300 hover:text-white">Dashboard</a>
+  <a href="contas.html" class="text-gray-300 hover:text-white font-bold">Contas</a>
+  <a href="transacoes.html" class="text-gray-300 hover:text-white">Transações</a>
+  <a href="relatorios.html" class="text-gray-300 hover:text-white">Relatórios</a>
+  <a href="configuracoes.html" class="text-gray-300 hover:text-white">Configurações</a>
+</div>
 
-    <!-- Formulário -->
-    <div class="card mb-6 p-4 rounded shadow">
-      <form id="form-conta" class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">
-        <div>
-          <label for="nome" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome da Conta</label>
-          <input id="nome" name="nome" type="text" required class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 w-full">
-        </div>
-        <div>
-          <label for="banco" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Banco</label>
-          <input id="banco" name="banco" type="text" required class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 w-full">
-        </div>
-        <div>
-          <label for="agencia" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Agência</label>
-          <input id="agencia" name="agencia" type="text" class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 w-full">
-        </div>
-        <div>
-          <label for="numero" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número da Conta</label>
-          <input id="numero" name="numero" type="text" class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 w-full">
-        </div>
-        <div class="md:col-span-2">
-          <label for="saldo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Saldo Inicial</label>
-          <input id="saldo" name="saldo" type="number" step="0.01" class="border border-gray-300 dark:border-gray-600 rounded-lg p-2 w-full">
-        </div>
-        <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 col-span-full mt-2">Salvar Conta</button>
-      </form>
-    </div>
+<main class="container mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-6">Cadastro de Contas Bancárias</h1>
 
-    <!-- Lista de Contas -->
-    <div class="card p-4 rounded shadow">
-      <h2 class="text-lg font-semibold mb-4">Contas Cadastradas</h2>
-      <div class="overflow-x-auto">
-        <table class="table w-full">
-          <thead>
-            <tr>
-              <th class="text-left">Nome</th>
-              <th class="text-left">Banco</th>
-              <th class="text-left">Agência</th>
-              <th class="text-left">Número</th>
-              <th class="text-right">Saldo</th>
-              <th class="text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tabela-contas"></tbody>
-        </table>
+  <!-- Formulário de Contas -->
+  <div class="card mb-6 p-4 rounded shadow">
+    <form id="form-conta" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label for="nome" class="block text-sm font-medium">Nome da Conta</label>
+        <input id="nome" type="text" required class="border rounded-lg p-2 w-full">
       </div>
-    </div>
-  </main>
-
-  <!-- Modal Editar Conta -->
-  <div id="modal-conta" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
-      <h2 class="text-xl font-semibold mb-4">Editar Conta</h2>
-      <form id="form-editar-conta" class="grid grid-cols-1 gap-4">
-        <input type="hidden" id="edit-id">
-        <input id="edit-nome" type="text" class="border rounded-lg p-2 bg-white dark:bg-gray-700" required>
-        <input id="edit-banco" type="text" class="border rounded-lg p-2 bg-white dark:bg-gray-700" required>
-        <input id="edit-agencia" type="text" class="border rounded-lg p-2 bg-white dark:bg-gray-700">
-        <input id="edit-numero" type="text" class="border rounded-lg p-2 bg-white dark:bg-gray-700">
-        <input id="edit-saldo" type="number" step="0.01" class="border rounded-lg p-2 bg-white dark:bg-gray-700">
-        <div class="flex justify-end gap-2 pt-4">
-          <button type="button" onclick="fecharModalConta()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-500">Cancelar</button>
-          <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200">Salvar Alterações</button>
-        </div>
-      </form>
-    </div>
+      <div>
+        <label for="banco" class="block text-sm font-medium">Banco</label>
+        <input id="banco" type="text" required class="border rounded-lg p-2 w-full">
+      </div>
+      <div>
+        <label for="agencia" class="block text-sm font-medium">Agência</label>
+        <input id="agencia" type="text" class="border rounded-lg p-2 w-full">
+      </div>
+      <div>
+        <label for="numero" class="block text-sm font-medium">Número da Conta</label>
+        <input id="numero" type="text" class="border rounded-lg p-2 w-full">
+      </div>
+      <div class="md:col-span-2">
+        <label for="saldo" class="block text-sm font-medium">Saldo Inicial</label>
+        <input id="saldo" type="number" step="0.01" class="border rounded-lg p-2 w-full">
+      </div>
+      <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg col-span-full mt-2">Salvar Conta</button>
+    </form>
   </div>
 
-  <script>
- let contasCache = [];
+  <!-- Lista de Contas -->
+  <div class="card p-4 rounded shadow">
+    <h2 class="text-lg font-semibold mb-4">Contas Cadastradas</h2>
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Banco</th>
+            <th>Agência</th>
+            <th>Número</th>
+            <th class="text-right">Saldo</th>
+            <th class="text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-contas">
+          <tr><td colspan="6" class="text-center text-gray-500">Nenhuma conta cadastrada.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
 
-// Formata valor em BRL
-function formatBRL(valor) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor || 0));
-}
+<!-- Modal Editar Conta -->
+<div id="modal-conta" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
+    <h2 class="text-xl font-semibold mb-4">Editar Conta</h2>
+    <form id="form-editar-conta" class="grid grid-cols-1 gap-4">
+      <input type="hidden" id="edit-id">
+      <input id="edit-nome" type="text" required class="border rounded-lg p-2">
+      <input id="edit-banco" type="text" required class="border rounded-lg p-2">
+      <input id="edit-agencia" type="text" class="border rounded-lg p-2">
+      <input id="edit-numero" type="text" class="border rounded-lg p-2">
+      <input id="edit-saldo" type="number" step="0.01" class="border rounded-lg p-2">
+      <div class="flex justify-end gap-2 pt-4">
+        <button type="button" onclick="fecharModalConta()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg">Cancelar</button>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">Salvar Alterações</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-// Atualiza cache e tabela
-async function atualizarCacheContas() {
-  try {
-    contasCache = await window.profinanceAPI.listarContas();
-    const tabela = document.getElementById('tabela-contas');
-    tabela.innerHTML = '';
-
-    if (!contasCache || contasCache.length === 0) {
-      tabela.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500">Nenhuma conta cadastrada.</td></tr>';
-      return;
-    }
-
-    tabela.innerHTML = contasCache.map(c => `
-      <tr>
-        <td>${c.nome}</td>
-        <td>${c.banco}</td>
-        <td>${c.agencia}</td>
-        <td>${c.numero}</td>
-        <td class="text-right">${formatBRL(c.saldo)}</td>
-        <td class="text-center">
-          <button onclick="abrirModalConta(${c.id})" class="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full p-2 shadow transition">✏️</button>
-          <button onclick="excluirConta(${c.id})" class="bg-red-600 hover:bg-red-700 text-white rounded-full p-2 shadow transition">🗑️</button>
-        </td>
-      </tr>
-    `).join('');
-
-  } catch (err) {
-    console.error('Erro ao atualizar cache de contas:', err);
-    showToast('Erro ao carregar contas!', 'error');
-  }
-}
-
-// Inserir nova conta
-document.getElementById('form-conta').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const novaConta = {
-    nome: document.getElementById('nome').value.trim(),
-    banco: document.getElementById('banco').value.trim(),
-    agencia: document.getElementById('agencia').value.trim(),
-    numero: document.getElementById('numero').value.trim(),
-    saldo: parseFloat(document.getElementById('saldo').value) || 0
-  };
-
-  try {
-    await window.profinanceAPI.cadastrarConta(novaConta);
-    showToast('Conta cadastrada com sucesso!', 'success');
-    document.getElementById('form-conta').reset();
-    await atualizarCacheContas();
-  } catch (err) {
-    console.error('Erro ao inserir conta:', err);
-    showToast('Erro ao cadastrar conta!', 'error');
-  }
-});
-
-// Abrir modal de edição
-function abrirModalConta(id) {
-  const conta = contasCache.find(c => c.id === id);
-  if (!conta) return;
-
-  document.getElementById('edit-id').value = conta.id;
-  document.getElementById('edit-nome').value = conta.nome;
-  document.getElementById('edit-banco').value = conta.banco;
-  document.getElementById('edit-agencia').value = conta.agencia;
-  document.getElementById('edit-numero').value = conta.numero;
-  document.getElementById('edit-saldo').value = conta.saldo;
-
-  document.getElementById('modal-conta').classList.remove('hidden');
-}
-
-// Fechar modal
-function fecharModalConta() {
-  document.getElementById('modal-conta').classList.add('hidden');
-}
-
-// Editar conta
-document.getElementById('form-editar-conta').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const contaAtualizada = {
-    id: Number(document.getElementById('edit-id').value),
-    nome: document.getElementById('edit-nome').value.trim(),
-    banco: document.getElementById('edit-banco').value.trim(),
-    agencia: document.getElementById('edit-agencia').value.trim(),
-    numero: document.getElementById('edit-numero').value.trim(),
-    saldo: parseFloat(document.getElementById('edit-saldo').value) || 0
-  };
-
-  try {
-    await window.profinanceAPI.atualizarConta(contaAtualizada);
-    showToast('Conta atualizada com sucesso!', 'success');
-    fecharModalConta();
-    await atualizarCacheContas();
-  } catch (err) {
-    console.error('Erro ao atualizar conta:', err);
-    showToast('Erro ao atualizar conta!', 'error');
-  }
-});
-
-// Excluir conta
-async function excluirConta(id) {
-  if (!confirm('Confirma exclusão desta conta? Todas as transações relacionadas serão removidas.')) return;
-
-  try {
-    await window.profinanceAPI.excluirConta(id);
-    showToast('Conta excluída!', 'info');
-    await atualizarCacheContas();
-  } catch (err) {
-    console.error('Erro ao excluir conta:', err);
-    showToast('Erro ao excluir conta!', 'error');
-  }
-}
-
-// Toast de notificação
-function showToast(text, type = 'info') {
-  let t = document.getElementById('__toast');
-  if (!t) {
-    t = document.createElement('div');
-    t.id = '__toast';
-    t.className = 'fixed right-5 bottom-5 z-[9999] flex flex-col items-end gap-2';
-    document.body.appendChild(t);
-  }
-
-  const el = document.createElement('div');
-  el.className = 'p-3 rounded-lg shadow-lg text-white font-medium animate-pulse';
-
-  if (type === 'success') el.style.background = '#10B981';
-  else if (type === 'info') el.style.background = '#3B82F6';
-  else el.style.background = '#EF4444';
-
-  el.innerText = text;
-  t.appendChild(el);
-
-  setTimeout(() => {
-    el.style.opacity = '0';
-    el.style.transition = 'opacity 0.5s ease';
-    setTimeout(() => el.remove(), 500);
-  }, 3000);
-}
-
-// Inicializa a página
-document.addEventListener('DOMContentLoaded', atualizarCacheContas);
-
-  </script>
 </body>
 </html>

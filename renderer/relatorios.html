@@ -1,333 +1,134 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Relatórios | ProFinance</title>
-  <link rel="stylesheet" href="output.css" />
-  <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.3.1/decimal.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-  <script src="theme.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatórios | ProFinance</title>
+<link rel="stylesheet" href="output.css">
+<script src="https://cdn.jsdelivr.net/npm/decimal.js@10.3.1/decimal.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+<script src="./renderer.js" defer></script>
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
-  <!-- Navbar -->
-  <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
-    <div class="flex items-center space-x-3">
-      <img src="assets/profinance.svg" alt="ProFinance" />
-    </div>
-    <div class="hidden md:flex space-x-6">
-      <a href="dashboard.html" class="text-gray-300 hover:text-white transition">Dashboard</a>
-      <a href="contas.html" class="text-gray-300 hover:text-white transition">Contas</a>
-      <a href="transacoes.html" class="text-gray-300 hover:text-white transition">Transações</a>
-      <a href="relatorios.html" class="text-gray-300 hover:text-white transition">Relatórios</a>
-      <a href="configuracoes.html" class="text-gray-300 hover:text-white transition">Configurações</a>
-    </div>
-    <div class="md:hidden">
-      <button id="menu-btn" class="text-white focus:outline-none">
-        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
-        </svg>
-      </button>
-    </div>
-  </nav>
 
-  <div class="container mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-6">Relatórios Financeiros</h1>
+<!-- Navbar -->
+<nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
+  <div class="flex items-center space-x-3">
+    <img src="assets/profinance.svg" alt="ProFinance" />
+  </div>
+  <div class="hidden md:flex space-x-6">
+    <a href="dashboard.html" class="text-gray-300 hover:text-white">Dashboard</a>
+    <a href="contas.html" class="text-gray-300 hover:text-white">Contas</a>
+    <a href="transacoes.html" class="text-gray-300 hover:text-white">Transações</a>
+    <a href="relatorios.html" class="text-gray-300 hover:text-white font-bold">Relatórios</a>
+    <a href="configuracoes.html" class="text-gray-300 hover:text-white">Configurações</a>
+  </div>
+  <div class="md:hidden">
+    <button id="menu-btn" class="text-white focus:outline-none">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
+      </svg>
+    </button>
+  </div>
+</nav>
 
-    <!-- Filtros -->
-    <div class="card mb-6 p-4 rounded shadow">
-      <form id="form-relatorio" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <select id="filtro-conta" class="border rounded-lg p-2">
-          <option value="">Todas as Contas</option>
-        </select>
-        <input id="filtro-data-inicio" class="border rounded-lg p-2" type="date" />
-        <input id="filtro-data-fim" class="border rounded-lg p-2" type="date" />
-        <select id="filtro-tipo" class="border rounded-lg p-2">
-          <option value="">Todos os Tipos</option>
-          <option value="credito">Crédito</option>
-          <option value="debito">Débito</option>
-        </select>
-        <div class="flex gap-2">
-          <button id="btn-filtrar" type="submit" class="button-primary w-full">Filtrar</button>
-          <button id="btn-limpar" type="button" class="button-secondary w-full">Limpar</button>
-        </div>
-      </form>
-    </div>
+<!-- Mobile Menu -->
+<div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
+  <a href="dashboard.html" class="text-gray-300 hover:text-white">Dashboard</a>
+  <a href="contas.html" class="text-gray-300 hover:text-white">Contas</a>
+  <a href="transacoes.html" class="text-gray-300 hover:text-white">Transações</a>
+  <a href="relatorios.html" class="text-gray-300 hover:text-white font-bold">Relatórios</a>
+  <a href="configuracoes.html" class="text-gray-300 hover:text-white">Configurações</a>
+</div>
 
-    <!-- Resumo -->
-    <div class="card p-4 rounded shadow">
-      <h2 class="text-lg font-semibold mb-4">Resumo do Período</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="card p-4 rounded shadow bg-green-100 dark:bg-green-700">
-          <p>Total Créditos</p>
-          <span id="total-creditos" class="text-green-600 dark:text-green-200 text-2xl font-bold">R$ 0,00</span>
-        </div>
-        <div class="card p-4 rounded shadow bg-red-100 dark:bg-red-700">
-          <p>Total Débitos</p>
-          <span id="total-debitos" class="text-red-600 dark:text-red-200 text-2xl font-bold">R$ 0,00</span>
-        </div>
-        <div class="card p-4 rounded shadow bg-blue-100 dark:bg-blue-700">
-          <p>Saldo Final</p>
-          <span id="saldo-final" class="text-blue-600 dark:text-blue-200 text-2xl font-bold">R$ 0,00</span>
-        </div>
+<main class="container mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-6">Relatórios Financeiros</h1>
+
+  <!-- Filtros -->
+  <div class="card mb-6 p-4 rounded shadow">
+    <form id="form-relatorio" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <select id="filtro-conta" class="border rounded-lg p-2">
+        <option value="">Todas as Contas</option>
+      </select>
+      <input id="filtro-data-inicio" class="border rounded-lg p-2" type="date" />
+      <input id="filtro-data-fim" class="border rounded-lg p-2" type="date" />
+      <select id="filtro-tipo" class="border rounded-lg p-2">
+        <option value="">Todos os Tipos</option>
+        <option value="credito">Crédito</option>
+        <option value="debito">Débito</option>
+      </select>
+      <div class="flex gap-2">
+        <button id="btn-filtrar" type="submit" class="button-primary w-full">Filtrar</button>
+        <button id="btn-limpar" type="button" class="button-secondary w-full">Limpar</button>
       </div>
-    </div>
+    </form>
+  </div>
 
-    <!-- Gráficos -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-      <div class="card p-4 rounded shadow" style="height:320px">
-        <h2 class="text-lg font-semibold mb-4">Entradas x Saídas</h2>
-        <canvas id="grafico-entradas-saidas"></canvas>
+  <!-- Resumo -->
+  <div class="card p-4 rounded shadow">
+    <h2 class="text-lg font-semibold mb-4">Resumo do Período</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="card p-4 rounded shadow bg-green-100 dark:bg-green-700">
+        <p>Total Créditos</p>
+        <span id="total-creditos" class="text-green-600 dark:text-green-200 text-2xl font-bold">R$ 0,00</span>
       </div>
-      <div class="card p-4 rounded shadow" style="height:320px">
-        <h2 class="text-lg font-semibold mb-4">Saldo Acumulado</h2>
-        <canvas id="grafico-saldo"></canvas>
+      <div class="card p-4 rounded shadow bg-red-100 dark:bg-red-700">
+        <p>Total Débitos</p>
+        <span id="total-debitos" class="text-red-600 dark:text-red-200 text-2xl font-bold">R$ 0,00</span>
       </div>
-    </div>
-
-    <!-- Exportação -->
-    <div class="flex justify-end gap-4 mt-6">
-      <button id="btn-export-pdf" class="button-primary">Exportar PDF</button>
-      <button id="btn-export-csv" class="button-secondary">Exportar CSV</button>
-    </div>
-
-    <!-- Extrato Detalhado -->
-    <div class="card p-4 rounded shadow mt-6">
-      <h2 class="text-lg font-semibold mb-4">Extrato Detalhado</h2>
-      <div class="overflow-x-auto">
-        <table class="table w-full">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Conta</th>
-              <th>Título</th>
-              <th>Tipo</th>
-              <th class="text-right">Valor</th>
-            </tr>
-          </thead>
-          <tbody id="tabela-extrato">
-            <tr><td colspan="5" class="text-center text-gray-500">Nenhuma transação encontrada para o período.</td></tr>
-          </tbody>
-          <tfoot class="bg-gray-100 dark:bg-gray-700 font-semibold">
-            <tr><td colspan="4" class="text-right">Total Créditos:</td><td id="extrato-total-creditos" class="text-green-600 text-right">R$ 0,00</td></tr>
-            <tr><td colspan="4" class="text-right">Total Débitos:</td><td id="extrato-total-debitos" class="text-red-600 text-right">R$ 0,00</td></tr>
-            <tr><td colspan="4" class="text-right">Saldo Final:</td><td id="extrato-saldo-final" class="text-blue-600 text-right">R$ 0,00</td></tr>
-          </tfoot>
-        </table>
+      <div class="card p-4 rounded shadow bg-blue-100 dark:bg-blue-700">
+        <p>Saldo Final</p>
+        <span id="saldo-final" class="text-blue-600 dark:text-blue-200 text-2xl font-bold">R$ 0,00</span>
       </div>
     </div>
   </div>
 
-<script>
-  let graficoEntradasSaidas = null;
-  let graficoSaldo = null;
+  <!-- Gráficos -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+    <div class="card p-4 rounded shadow" style="height:320px">
+      <h2 class="text-lg font-semibold mb-4">Entradas x Saídas</h2>
+      <canvas id="grafico-entradas-saidas"></canvas>
+    </div>
+    <div class="card p-4 rounded shadow" style="height:320px">
+      <h2 class="text-lg font-semibold mb-4">Saldo Acumulado</h2>
+      <canvas id="grafico-saldo"></canvas>
+    </div>
+  </div>
 
-  function formatBRL(d) {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(new Decimal(d || 0).toFixed(2)));
-  }
+  <!-- Exportação -->
+  <div class="flex justify-end gap-4 mt-6">
+    <button id="btn-export-pdf" class="button-primary">Exportar PDF</button>
+    <button id="btn-export-csv" class="button-secondary">Exportar CSV</button>
+  </div>
 
-  async function carregarContas() {
-    const contas = await window.profinanceAPI.listarContas();
-    const select = document.getElementById("filtro-conta");
-    select.innerHTML = '<option value="">Todas as Contas</option>';
-    contas.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = `${c.nome} (${c.banco})`;
-      select.appendChild(opt);
-    });
-  }
+  <!-- Extrato Detalhado -->
+  <div class="card p-4 rounded shadow mt-6">
+    <h2 class="text-lg font-semibold mb-4">Extrato Detalhado</h2>
+    <div class="overflow-x-auto">
+      <table class="table w-full">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Conta</th>
+            <th>Título</th>
+            <th>Tipo</th>
+            <th class="text-right">Valor</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-extrato">
+          <tr><td colspan="5" class="text-center text-gray-500">Nenhuma transação encontrada para o período.</td></tr>
+        </tbody>
+        <tfoot class="bg-gray-100 dark:bg-gray-700 font-semibold">
+          <tr><td colspan="4" class="text-right">Total Créditos:</td><td id="extrato-total-creditos" class="text-green-600 text-right">R$ 0,00</td></tr>
+          <tr><td colspan="4" class="text-right">Total Débitos:</td><td id="extrato-total-debitos" class="text-red-600 text-right">R$ 0,00</td></tr>
+          <tr><td colspan="4" class="text-right">Saldo Final:</td><td id="extrato-saldo-final" class="text-blue-600 text-right">R$ 0,00</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
 
-  function atualizarGraficos(transacoes) {
-    const meses = [...new Set(transacoes.map(t => t.data.slice(0, 7)))].sort();
-    const entradas = meses.map(m => transacoes.filter(t => t.tipo === 'credito' && t.data.startsWith(m)).reduce((acc, t) => acc + Number(t.valor), 0));
-    const saidas = meses.map(m => transacoes.filter(t => t.tipo === 'debito' && t.data.startsWith(m)).reduce((acc, t) => acc + Number(t.valor), 0));
-    const saldo = meses.map((_, i) => entradas.slice(0, i + 1).reduce((a, b) => a + b, 0) - saidas.slice(0, i + 1).reduce((a, b) => a + b, 0));
-
-    if (graficoEntradasSaidas) graficoEntradasSaidas.destroy();
-    if (graficoSaldo) graficoSaldo.destroy();
-
-    graficoEntradasSaidas = new Chart(document.getElementById("grafico-entradas-saidas").getContext("2d"), {
-      type: 'bar',
-      data: {
-        labels: meses,
-        datasets: [
-          { label: 'Entradas', data: entradas, backgroundColor: '#16a34a' },
-          { label: 'Saídas', data: saidas, backgroundColor: '#dc2626' }
-        ]
-      },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
-
-    graficoSaldo = new Chart(document.getElementById("grafico-saldo").getContext("2d"), {
-      type: 'line',
-      data: {
-        labels: meses,
-        datasets: [{
-          label: 'Saldo Acumulado',
-          data: saldo,
-          borderColor: '#2563eb',
-          backgroundColor: 'rgba(37,99,235,0.2)',
-          fill: true,
-          tension: 0.3
-        }]
-      },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
-  }
-
-  async function carregarRelatorio() {
-    const contaId = document.getElementById("filtro-conta").value;
-    const inicio = document.getElementById("filtro-data-inicio").value;
-    const fim = document.getElementById("filtro-data-fim").value;
-    const tipo = document.getElementById("filtro-tipo").value;
-
-    const params = { contaId: contaId || null, inicio: inicio || null, fim: fim || null, tipo: tipo || null };
-    const transacoes = await window.profinanceAPI.queryTransacoes(params);
-
-    const totalCreditos = transacoes.filter(t => t.tipo === 'credito').reduce((acc, t) => acc.plus(new Decimal(t.valor)), new Decimal(0));
-    const totalDebitos = transacoes.filter(t => t.tipo === 'debito').reduce((acc, t) => acc.plus(new Decimal(t.valor)), new Decimal(0));
-    const saldoFinal = totalCreditos.minus(totalDebitos);
-
-    document.getElementById("total-creditos").textContent = formatBRL(totalCreditos);
-    document.getElementById("total-debitos").textContent = formatBRL(totalDebitos);
-    document.getElementById("saldo-final").textContent = formatBRL(saldoFinal);
-
-    atualizarGraficos(transacoes);
-
-    const tabelaExtrato = document.getElementById("tabela-extrato");
-    if (!transacoes.length) {
-      tabelaExtrato.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">Nenhuma transação encontrada para o período.</td></tr>`;
-    } else {
-      tabelaExtrato.innerHTML = transacoes.map(t => `
-        <tr class="hover:bg-gray-100 dark:hover:bg-gray-800">
-          <td>${new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-          <td>${t.conta_nome || '-'}</td>
-          <td>${t.titulo}</td>
-          <td>${t.tipo === 'credito' ? 'Crédito' : 'Débito'}</td>
-          <td class="text-right ${t.tipo === 'credito' ? 'text-green-600' : 'text-red-600'}">${formatBRL(t.valor)}</td>
-        </tr>`).join('');
-    }
-
-    document.getElementById("extrato-total-creditos").textContent = formatBRL(totalCreditos);
-    document.getElementById("extrato-total-debitos").textContent = formatBRL(totalDebitos);
-    document.getElementById("extrato-saldo-final").textContent = formatBRL(saldoFinal);
-  }
-
-  // Exportar PDF corrigido
-  async function exportarPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF("p", "pt", "a4");
-
-    doc.setFontSize(16);
-    doc.setTextColor(40);
-    doc.text("ProFinance - Relatório Financeiro", 40, 40);
-
-    const dataAtual = new Date().toLocaleDateString("pt-BR");
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Gerado em: ${dataAtual}`, 40, 60);
-
-    const tabelaOriginal = document.querySelector("#tabela-extrato").closest("table");
-    const tabelaClonada = tabelaOriginal.cloneNode(true);
-    const rodapeClonado = tabelaClonada.querySelector("tfoot");
-    if (rodapeClonado) rodapeClonado.remove();
-
-    const tfoot = tabelaOriginal.querySelector("tfoot");
-    let totais = { creditos: "R$ 0,00", debitos: "R$ 0,00", saldo: "R$ 0,00" };
-    if (tfoot) {
-      const rows = tfoot.querySelectorAll("tr");
-      totais.creditos = rows[0]?.querySelector("td:last-child")?.textContent || "R$ 0,00";
-      totais.debitos = rows[1]?.querySelector("td:last-child")?.textContent || "R$ 0,00";
-      totais.saldo = rows[2]?.querySelector("td:last-child")?.textContent || "R$ 0,00";
-    }
-
-    doc.autoTable({
-      html: tabelaClonada,
-      startY: 80,
-      theme: "grid",
-      styles: { fontSize: 10, cellPadding: 5 },
-      headStyles: {
-        fillColor: [33, 37, 41],
-        textColor: [255, 255, 255],
-        fontStyle: "bold",
-      },
-      bodyStyles: { textColor: [0, 0, 0] },
-      didParseCell: function (data) {
-        if (data.section === "body" && data.column.index === 4) {
-          const valor = data.cell.text[0] || "";
-          if (valor.startsWith("-")) {
-            data.cell.styles.textColor = [220, 53, 69];
-          } else {
-            data.cell.styles.textColor = [25, 135, 84];
-          }
-        }
-      },
-    });
-
-    const posFinal = doc.autoTable.previous.finalY + 20;
-
-    doc.setFontSize(12);
-    doc.setFont(undefined, "bold");
-
-    doc.setTextColor(22, 163, 74);
-    doc.text(`Total Créditos: ${totais.creditos}`, 40, posFinal);
-
-    doc.setTextColor(220, 53, 69);
-    doc.text(`Total Débitos: ${totais.debitos}`, 40, posFinal + 20);
-
-    doc.setTextColor(37, 99, 235);
-    doc.text(`Saldo Final: ${totais.saldo}`, 40, posFinal + 40);
-
-    doc.save("relatorio_financeiro.pdf");
-  }
-
-  document.getElementById("btn-export-pdf").addEventListener("click", exportarPDF);
-
-  document.getElementById("btn-export-csv").addEventListener("click", () => {
-    const table = document.querySelector("#tabela-extrato").closest("table");
-    let csv = [];
-    const rows = table.querySelectorAll("tr");
-    for (let row of rows) {
-      let cols = row.querySelectorAll("td, th");
-      let data = [];
-      cols.forEach(col => data.push(`"${col.innerText}"`));
-      csv.push(data.join(","));
-    }
-    const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(csvFile);
-    link.download = "relatorio_financeiro.csv";
-    link.click();
-  });
-
-  document.getElementById("form-relatorio").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    await carregarRelatorio();
-  });
-
-  document.getElementById("btn-limpar").addEventListener("click", async () => {
-    document.getElementById("filtro-conta").value = "";
-    document.getElementById("filtro-data-inicio").value = "";
-    document.getElementById("filtro-data-fim").value = "";
-    document.getElementById("filtro-tipo").value = "";
-    document.getElementById("tabela-extrato").innerHTML = `<tr><td colspan="5" class="text-center text-gray-500">Nenhuma transação encontrada para o período.</td></tr>`;
-    document.getElementById("total-creditos").textContent = "R$ 0,00";
-    document.getElementById("total-debitos").textContent = "R$ 0,00";
-    document.getElementById("saldo-final").textContent = "R$ 0,00";
-    document.getElementById("extrato-total-creditos").textContent = "R$ 0,00";
-    document.getElementById("extrato-total-debitos").textContent = "R$ 0,00";
-    document.getElementById("extrato-saldo-final").textContent = "R$ 0,00";
-    if (graficoEntradasSaidas) graficoEntradasSaidas.destroy();
-    if (graficoSaldo) graficoSaldo.destroy();
-  });
-
-  document.addEventListener("DOMContentLoaded", async () => {
-    await carregarContas();
-    // Relatório não carrega automaticamente
-  });
-</script>
+</main>
 </body>
 </html>
