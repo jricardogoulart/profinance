@@ -102,3 +102,39 @@ select:focus,
 textarea:focus {
   @apply ring-2 ring-blue-400 outline-none transition-shadow;
 }
+@tailwind base;
+@tailwind components;
+
+/* ==== Customizações manuais ==== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 100, 0.6);
+}
+
+/* Dark mode */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(200, 200, 200, 0.3);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(200, 200, 200, 0.5);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 100, 0.4) transparent;
+}
+.dark * {
+  scrollbar-color: rgba(200, 200, 200, 0.3) transparent;
+}
+
+@tailwind utilities;

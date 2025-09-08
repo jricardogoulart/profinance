@@ -20,102 +20,42 @@
         <img src="assets/profinance.svg" alt="ProFinance" />
       </div>
       <div class="hidden md:flex space-x-6">
-        <a
-          href="#"
-          onclick="navigateTo('dashboard.html'); return false;"
-          class="text-gray-300 hover:text-white"
-          >Dashboard</a
-        >
-        <a
-          href="#"
-          onclick="navigateTo('contas.html'); return false;"
-          class="text-gray-300 hover:text-white"
-          >Contas</a
-        >
-        <a
-          href="#"
-          onclick="navigateTo('transacoes.html'); return false;"
-          class="text-gray-300 hover:text-white"
-          >Transações</a
-        >
-        <a
-          href="#"
-          onclick="navigateTo('relatorios.html'); return false;"
-          class="text-gray-300 hover:text-white"
-          >Relatórios</a
-        >
-        <a
-          href="#"
-          onclick="navigateTo('configuracoes.html'); return false;"
-          class="text-gray-300 hover:text-white font-bold"
-          >Configurações</a
-        >
+        <a href="#" onclick="navigateTo('dashboard.html'); return false;" class="text-gray-300 hover:text-white">Dashboard</a>
+        <a href="#" onclick="navigateTo('contas.html'); return false;" class="text-gray-300 hover:text-white">Contas</a>
+        <a href="#" onclick="navigateTo('transacoes.html'); return false;" class="text-gray-300 hover:text-white">Transações</a>
+        <a href="#" onclick="navigateTo('relatorios.html'); return false;" class="text-gray-300 hover:text-white">Relatórios</a>
+        <a href="#" onclick="navigateTo('configuracoes.html'); return false;" class="text-gray-300 hover:text-white font-bold">Configurações</a>
       </div>
       <div class="md:hidden">
         <button id="menu-btn" class="text-white focus:outline-none">
-          <svg
-            class="w-7 h-7"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M4 6h16M4 12h16m-7 6h7"
-            ></path>
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
           </svg>
         </button>
       </div>
     </nav>
 
     <!-- Mobile Menu -->
-    <div
-      id="mobile-menu"
-      class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4"
-    >
-      <a
-        href="#"
-        onclick="navigateTo('dashboard.html'); return false;"
-        class="text-gray-300"
-        >Dashboard</a
-      >
-      <a
-        href="#"
-        onclick="navigateTo('contas.html'); return false;"
-        class="text-gray-300"
-        >Contas</a
-      >
-      <a
-        href="#"
-        onclick="navigateTo('transacoes.html'); return false;"
-        class="text-gray-300"
-        >Transações</a
-      >
-      <a
-        href="#"
-        onclick="navigateTo('relatorios.html'); return false;"
-        class="text-gray-300"
-        >Relatórios</a
-      >
-      <a
-        href="#"
-        onclick="navigateTo('configuracoes.html'); return false;"
-        class="text-gray-300 font-bold"
-        >Configurações</a
-      >
+    <div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
+      <a href="#" onclick="navigateTo('dashboard.html'); return false;" class="text-gray-300">Dashboard</a>
+      <a href="#" onclick="navigateTo('contas.html'); return false;" class="text-gray-300">Contas</a>
+      <a href="#" onclick="navigateTo('transacoes.html'); return false;" class="text-gray-300">Transações</a>
+      <a href="#" onclick="navigateTo('relatorios.html'); return false;" class="text-gray-300">Relatórios</a>
+      <a href="#" onclick="navigateTo('configuracoes.html'); return false;" class="text-gray-300 font-bold">Configurações</a>
     </div>
 
     <main class="container mx-auto p-6">
-      <h1 class="text-2xl font-bold mb-6">Configurações do Sistema</h1>
+      <h1 class="text-2xl font-bold mb-6">⚙️Configurações do Sistema</h1>
 
-      <!-- Preferências -->
+      <!-- Card Preferências -->
       <div class="card mb-6 p-4 rounded shadow">
         <h2 class="text-lg font-semibold mb-2">Preferências</h2>
-        <label class="flex items-center gap-2">
-          <input type="checkbox" id="toggle-tema" class="form-checkbox" />
-          <span>Tema Escuro</span>
+        <label class="flex items-center cursor-pointer select-none">
+          <input type="checkbox" id="toggle-tema" class="sr-only peer">
+          <div class="w-14 h-7 bg-gray-300 rounded-full relative transition-colors duration-300 ease-in-out peer-checked:bg-blue-600">
+            <span id="toggle-circle" class="absolute left-1 top-1 w-5 h-5 bg-white rounded-full shadow-lg transition-transform duration-300 ease-in-out peer-checked:translate-x-7"></span>
+          </div>
+          <span class="ml-4 text-sm font-medium text-gray-700 dark:text-gray-300">Tema Escuro</span>
         </label>
       </div>
 
@@ -124,22 +64,67 @@
         <h2 class="text-lg font-semibold mb-2">Backup e Restauração</h2>
         <div class="flex gap-3">
           <button id="btn-backup" class="button-primary">Fazer Backup</button>
-          <button id="btn-restore" class="button-danger">
-            Restaurar Backup
-          </button>
+          <button id="btn-restore" class="button-danger">Restaurar Backup</button>
         </div>
         <p class="mt-3 text-sm text-gray-600">
-          O backup salva uma cópia do arquivo de banco de dados com data/hora no
-          nome.
+          O backup salva uma cópia do arquivo de banco de dados com data/hora no nome.
         </p>
       </div>
 
       <!-- Sobre o Sistema -->
-      <div class="card p-4 rounded shadow">
-        <h2 class="text-lg font-semibold mb-2">Sobre o Sistema</h2>
-        <p>ProFinance v1.0</p>
-        <p>Desenvolvido por Ricardo Goulart</p>
+      <div class="card p-6 rounded shadow flex items-center gap-4">
+        <img src="https://github.com/jricardogoulart.png" alt="Foto de perfil" class="w-20 h-20 rounded-full border-2 border-gray-300 dark:border-gray-600 shadow"/>
+        <div>
+          <h2 class="text-xl font-semibold">José Ricardo Goulart</h2>
+          <p class="text-gray-600 dark:text-gray-400">Desenvolvedor do ProFinance®</p>
+          <div class="mt-2 flex items-center gap-4">
+            <!-- GitHub -->
+            <a href="https://github.com/jricardogoulart" target="_blank" class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.112.82-.26.82-.578
+                 0-.285-.01-1.04-.015-2.04-3.338.726-4.042-1.61-4.042-1.61-.546-1.385-1.333-1.755-1.333-1.755
+                 -1.09-.744.083-.729.083-.729 1.205.085 1.84 1.236 1.84 1.236 1.07 1.835 2.807 1.305 3.492.997
+                 .107-.775.42-1.305.763-1.605-2.665-.305-5.466-1.332-5.466-5.93
+                 0-1.31.468-2.38 1.236-3.22-.124-.303-.536-1.523.117-3.176
+                 0 0 1.008-.322 3.3 1.23a11.5 11.5 0 0 1 3.003-.404c1.02.005 2.047.138 3.003.404
+                 2.29-1.552 3.297-1.23 3.297-1.23.655 1.653.243 2.873.12 3.176
+                 .77.84 1.235 1.91 1.235 3.22 0 4.61-2.805 5.623-5.476 5.92
+                 .43.37.823 1.102.823 2.222 0 1.606-.015 2.896-.015 3.286
+                 0 .32.216.694.825.576C20.565 21.796 24 17.297 24 12
+                 c0-6.63-5.37-12-12-12z" clip-rule="evenodd"/>
+              </svg>
+              GitHub
+            </a>
+
+            <!-- WhatsApp -->
+            <a href="https://wa.me/+5516974059994" target="_blank" class="inline-flex items-center gap-2 text-green-600 dark:text-green-400 hover:underline">
+              <?xml version="1.0" encoding="UTF-8"?>
+
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xodm="http://www.corel.com/coreldraw/odm/2003" xml:space="preserve" width="18px" height="18px" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 18 18">
+ <defs>
+  <style type="text/css">
+    .fil0 {fill:#42B86E}
+  </style>
+ </defs>
+ <g id="Camada_x0020_1_0">
+  <metadata id="CorelCorpID_0Corel-Layer"/>
+  <path id="whatsapp-icon.svg" class="fil0" d="M15.38 2.62c-1.69,-1.69 -3.94,-2.62 -6.34,-2.62 -4.94,0 -8.96,4 -8.97,8.92 0,1.57 0.42,3.11 1.2,4.46l-1.27 4.62 4.75 -1.24c1.31,0.71 2.78,1.09 4.28,1.09l0.01 0c4.94,0 8.96,-4.01 8.96,-8.92 0,-2.39 -0.93,-4.63 -2.62,-6.31l0 0 0 0zm-6.34 13.72l-0.01 0c-1.33,0 -2.64,-0.36 -3.79,-1.03l-0.27 -0.16 -2.82 0.73 0.75 -2.73 -0.17 -0.28c-0.75,-1.19 -1.14,-2.55 -1.14,-3.95 0,-4.09 3.34,-7.42 7.45,-7.42 1.99,0.01 3.86,0.78 5.27,2.18 1.4,1.4 2.18,3.26 2.18,5.25 0,4.08 -3.35,7.41 -7.45,7.41l0 0zm4.08 -5.55c-0.22,-0.11 -1.32,-0.65 -1.53,-0.73 -0.2,-0.07 -0.35,-0.11 -0.5,0.11 -0.15,0.23 -0.58,0.73 -0.71,0.88 -0.13,0.15 -0.26,0.16 -0.48,0.05 -0.23,-0.11 -0.95,-0.34 -1.81,-1.1 -0.66,-0.59 -1.11,-1.32 -1.24,-1.55 -0.13,-0.22 -0.02,-0.34 0.1,-0.45 0.1,-0.1 0.22,-0.26 0.33,-0.39 0.11,-0.13 0.15,-0.23 0.23,-0.37 0.07,-0.15 0.03,-0.28 -0.02,-0.39 -0.06,-0.12 -0.51,-1.21 -0.69,-1.66 -0.18,-0.43 -0.37,-0.38 -0.51,-0.38 -0.13,-0.01 -0.28,-0.01 -0.43,-0.01 -0.15,0 -0.39,0.06 -0.59,0.28 -0.21,0.22 -0.79,0.76 -0.79,1.86 0,1.09 0.8,2.16 0.92,2.3 0.11,0.15 1.58,2.4 3.82,3.37 0.54,0.23 0.96,0.37 1.28,0.47 0.54,0.17 1.02,0.15 1.41,0.09 0.43,-0.07 1.33,-0.54 1.51,-1.06 0.19,-0.52 0.19,-0.97 0.13,-1.06 -0.05,-0.1 -0.2,-0.15 -0.43,-0.26l0 0 0 0z"/>
+ </g>
+</svg>
+
+
+              WhatsApp
+            </a>
+          </div>
+        </div>
       </div>
+
     </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 bg-gray-900 dark:bg-gray-800 text-gray-300 py-4 text-center border-t border-gray-700">
+      <p class="text-sm">&copy; 2025 ProFinance. Todos os direitos reservados.</p>
+      <p class="text-xs mt-1">Desenvolvido por <a href="https://github.com/jricardogoulart" target="_blank" class="hover:underline text-blue-400">José Ricardo Goulart</a></p>
+    </footer>
   </body>
 </html>

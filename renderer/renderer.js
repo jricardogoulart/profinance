@@ -2,14 +2,22 @@
 document.addEventListener("DOMContentLoaded", () => {
   const html = document.documentElement;
   const toggleBtn = document.getElementById("toggle-tema");
+  const toggleCircle = document.getElementById("toggle-circle");
 
+  // Aplica o tema salvo ou preferência do sistema
   const savedTheme = localStorage.getItem("theme");
-  if (savedTheme === "dark") html.classList.add("dark");
-  else if (savedTheme === "light") html.classList.remove("dark");
-  else if (window.matchMedia("(prefers-color-scheme: dark)").matches) html.classList.add("dark");
+  if (savedTheme === "dark") {
+    html.classList.add("dark");
+    if (toggleBtn) toggleBtn.checked = true;
+  } else if (savedTheme === "light") {
+    html.classList.remove("dark");
+    if (toggleBtn) toggleBtn.checked = false;
+  } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    html.classList.add("dark");
+    if (toggleBtn) toggleBtn.checked = true;
+  }
 
-  if (toggleBtn) toggleBtn.checked = html.classList.contains("dark");
-
+  // Evento de clique no toggle
   if (toggleBtn) {
     toggleBtn.addEventListener("change", () => {
       if (toggleBtn.checked) {
@@ -19,9 +27,16 @@ document.addEventListener("DOMContentLoaded", () => {
         html.classList.remove("dark");
         localStorage.setItem("theme", "light");
       }
+
+      // Pulse animation
+      toggleCircle.classList.add("animate-pulse");
+      setTimeout(() => {
+        toggleCircle.classList.remove("animate-pulse");
+      }, 300);
     });
   }
 });
+
 
 // =================== Menu Mobile ===================
 document.addEventListener("DOMContentLoaded", () => {
@@ -598,21 +613,22 @@ async function exportarRelatorioPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF("p", "pt", "a4");
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   let cursorY = 20;
 
-  const logoPath = "assets/profinance.png"; // PNG carregado na pasta
+  const logoPath = "assets/profinance.png";
   const headerHeight = 40;
 
   // Cabeçalho preto
-  doc.setFillColor(0, 0, 0);
+  doc.setFillColor(20, 20, 20);
   doc.rect(0, 0, pageWidth, headerHeight, "F");
 
-  // Logo à esquerda
+  // Logo
   const img = new Image();
   img.src = logoPath;
   await new Promise((resolve) => {
     img.onload = () => {
-      const scale = headerHeight / img.height * 0.8;
+      const scale = (headerHeight / img.height) * 0.8;
       const logoWidth = img.width * scale;
       const logoHeight = img.height * scale;
       doc.addImage(img, "PNG", 14, (headerHeight - logoHeight) / 2, logoWidth, logoHeight);
@@ -621,7 +637,7 @@ async function exportarRelatorioPDF() {
     img.onerror = resolve;
   });
 
-  // Título centralizado
+  // Título
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
@@ -629,42 +645,61 @@ async function exportarRelatorioPDF() {
 
   cursorY = headerHeight + 20;
 
-  // Extrato Detalhado
+  // Extrato da tabela HTML
   const tabela = document.getElementById("tabela-extrato");
   const rows = Array.from(tabela.querySelectorAll("tr")).map(tr =>
     Array.from(tr.querySelectorAll("td")).map(td => td.innerText)
   );
 
+  // Renderiza a tabela
   doc.autoTable({
     startY: cursorY,
     head: [["Data", "Conta", "Título", "Tipo", "Valor"]],
     body: rows,
     theme: "grid",
-    headStyles: { fillColor: [50, 50, 50], textColor: 255, halign: "center" },
+    headStyles: { fillColor: [40, 40, 40], textColor: 255, halign: "center" },
     bodyStyles: { halign: "center" },
-    foot: [
-      ["Total Créditos", "", "", "", document.getElementById("extrato-total-creditos").innerText],
-      ["Total Débitos", "", "", "", document.getElementById("extrato-total-debitos").innerText],
-      ["Saldo Final", "", "", "", document.getElementById("extrato-saldo-final").innerText]
-    ],
-    footStyles: { textColor: 255, fontStyle: "bold", halign: "center", fillColor: [100,100,100] }, // cor padrão
-    didParseCell: function(data) {
-      if (data.row.section === "foot") {
-        // cores personalizadas por linha
-        if (data.row.index === 0) data.cell.styles.fillColor = [0, 200, 0]; // Créditos verde
-        if (data.row.index === 1) data.cell.styles.fillColor = [200, 0, 0]; // Débitos vermelho
-        if (data.row.index === 2) data.cell.styles.fillColor = [0, 0, 255]; // Saldo azul
-        // bordas arredondadas
-        data.cell.styles.cellPadding = 4;
-        data.cell.styles.lineWidth = 0.5;
-      }
-    },
+    margin: { bottom: 80 }, // espaço para o footer
+    didDrawPage: function (data) {
+      // Rodapé fixo com numeração de páginas
+      let str = "Página " + doc.internal.getNumberOfPages();
+      doc.setFontSize(10);
+      doc.setTextColor(120, 120, 120);
+      doc.text(str, pageWidth / 2, pageHeight - 20, { align: "center" });
+    }
   });
 
-  doc.save(`Relatorio-ProFinance-${new Date().toISOString().slice(0,10)}.pdf`);
+  // Adiciona o footer apenas na última página
+  const totalPages = doc.internal.getNumberOfPages();
+  doc.setPage(totalPages);
+
+  const finalY = doc.lastAutoTable.finalY + 20;
+  const totais = [
+    { label: "Total Créditos", valor: document.getElementById("extrato-total-creditos").innerText, cor: [46, 204, 113] }, // verde suave
+    { label: "Total Débitos", valor: document.getElementById("extrato-total-debitos").innerText, cor: [231, 76, 60] },  // vermelho suave
+    { label: "Saldo Final", valor: document.getElementById("extrato-saldo-final").innerText, cor: [52, 152, 219] }       // azul suave
+  ];
+
+  let footerY = finalY;
+  totais.forEach((item) => {
+    doc.setFillColor(...item.cor);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.rect(40, footerY, pageWidth - 80, 20, "F");
+    doc.text(item.label, 60, footerY + 14);
+    doc.text(item.valor, pageWidth - 60, footerY + 14, { align: "right" });
+    footerY += 25;
+  });
+
+  doc.save(`Relatorio-ProFinance-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
 document.getElementById("btn-export-pdf")?.addEventListener("click", exportarRelatorioPDF);
+
+
+document.getElementById("btn-export-pdf")?.addEventListener("click", exportarRelatorioPDF);
+
 
 
 document.getElementById("btn-export-csv")?.addEventListener("click", () => {
