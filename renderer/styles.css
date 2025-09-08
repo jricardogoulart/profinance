@@ -47,7 +47,7 @@ html {
 
 /* ===== Cards ===== */
 .card {
-  @apply bg-white rounded-xl shadow-md p-5 transform transition-transform hover: hover:shadow-xl dark:bg-gray-800 dark:text-gray-100;
+  @apply bg-white rounded-xl shadow-md p-5 transform transition-transform hover:-translate-y-1 hover:shadow-xl dark:bg-gray-800 dark:text-gray-100;
 }
 
 /* ===== Tabelas ===== */

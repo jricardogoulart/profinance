@@ -5,20 +5,46 @@
   "main": "main.js",
   "scripts": {
     "start": "concurrently \"npm run dev:css\" \"electron .\"",
-    "dev:css": "npx tailwindcss -i ./renderer/styles.css -o ./renderer/output.css --watch"
+    "dev:css": "npx tailwindcss -i ./renderer/styles.css -o ./renderer/output.css --watch",
+    "dist": "electron-builder"
   },
   "author": "Ricardo Goulart",
   "license": "MIT",
+  "build": {
+    "appId": "com.ricardogoulart.profinance",
+    "productName": "ProFinance",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/**/*.map"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "renderer/assets/profinanceicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
     "electron": "^29.4.6",
     "electron-rebuild": "^3.2.9",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "electron-builder": "^24.6.0",
+    "concurrently": "^9.2.1"
   },
   "dependencies": {
     "better-sqlite3": "^12.2.0",
-    "concurrently": "^9.2.1",
     "cors": "^2.8.5",
     "decimal.js": "^10.6.0",
     "dotenv": "^17.2.2",

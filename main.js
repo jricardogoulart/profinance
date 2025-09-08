@@ -5,7 +5,7 @@ const fs = require("fs");
 const Database = require("better-sqlite3");
 const Decimal = require("decimal.js");
 
-const dbPath = path.join(__dirname, "..", "profinance.db");
+const dbPath = path.join(app.getPath('userData'), 'profinance.db');
 let db;
 
 function openDatabase() {
