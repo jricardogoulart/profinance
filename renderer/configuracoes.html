@@ -1,76 +1,145 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Configurações | ProFinance</title>
-<link rel="stylesheet" href="output.css">
-<script src="https://cdn.jsdelivr.net/npm/decimal.js@10.3.1/decimal.min.js"></script>
-<script src="./renderer.js" defer></script>
-</head>
-<body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Configurações | ProFinance</title>
+    <link rel="stylesheet" href="output.css" />
+    <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.3.1/decimal.min.js"></script>
+    <script src="./renderer.js" defer></script>
+  </head>
+  <body
+    id="app"
+    class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white"
+  >
+    <!-- Navbar -->
+    <nav
+      class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between"
+    >
+      <div class="flex items-center space-x-3">
+        <img src="assets/profinance.svg" alt="ProFinance" />
+      </div>
+      <div class="hidden md:flex space-x-6">
+        <a
+          href="#"
+          onclick="navigateTo('dashboard.html'); return false;"
+          class="text-gray-300 hover:text-white"
+          >Dashboard</a
+        >
+        <a
+          href="#"
+          onclick="navigateTo('contas.html'); return false;"
+          class="text-gray-300 hover:text-white"
+          >Contas</a
+        >
+        <a
+          href="#"
+          onclick="navigateTo('transacoes.html'); return false;"
+          class="text-gray-300 hover:text-white"
+          >Transações</a
+        >
+        <a
+          href="#"
+          onclick="navigateTo('relatorios.html'); return false;"
+          class="text-gray-300 hover:text-white"
+          >Relatórios</a
+        >
+        <a
+          href="#"
+          onclick="navigateTo('configuracoes.html'); return false;"
+          class="text-gray-300 hover:text-white font-bold"
+          >Configurações</a
+        >
+      </div>
+      <div class="md:hidden">
+        <button id="menu-btn" class="text-white focus:outline-none">
+          <svg
+            class="w-7 h-7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 6h16M4 12h16m-7 6h7"
+            ></path>
+          </svg>
+        </button>
+      </div>
+    </nav>
 
-<!-- Navbar -->
-<nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
-  <div class="flex items-center space-x-3">
-    <img src="assets/profinance.svg" alt="ProFinance" />
-  </div>
-  <div class="hidden md:flex space-x-6">
-    <a href="dashboard.html" class="text-gray-300 hover:text-white">Dashboard</a>
-    <a href="contas.html" class="text-gray-300 hover:text-white">Contas</a>
-    <a href="transacoes.html" class="text-gray-300 hover:text-white">Transações</a>
-    <a href="relatorios.html" class="text-gray-300 hover:text-white">Relatórios</a>
-    <a href="configuracoes.html" class="text-gray-300 hover:text-white font-bold">Configurações</a>
-  </div>
-  <div class="md:hidden">
-    <button id="menu-btn" class="text-white focus:outline-none">
-      <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"></path>
-      </svg>
-    </button>
-  </div>
-</nav>
-
-<!-- Mobile menu -->
-<div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
-  <a href="dashboard.html" class="text-gray-300 hover:text-white">Dashboard</a>
-  <a href="contas.html" class="text-gray-300 hover:text-white">Contas</a>
-  <a href="transacoes.html" class="text-gray-300 hover:text-white">Transações</a>
-  <a href="relatorios.html" class="text-gray-300 hover:text-white">Relatórios</a>
-  <a href="configuracoes.html" class="text-gray-300 hover:text-white font-bold">Configurações</a>
-</div>
-
-<main class="container mx-auto p-6">
-  <h1 class="text-2xl font-bold mb-6">Configurações do Sistema</h1>
-
-  <!-- Preferências -->
-  <div class="card mb-6 p-4 rounded shadow">
-    <h2 class="text-lg font-semibold mb-2">Preferências</h2>
-    <label class="flex items-center gap-2">
-      <input type="checkbox" id="toggle-tema" class="form-checkbox">
-      <span>Tema Escuro</span>
-    </label>
-  </div>
-
-  <!-- Backup e Restauração -->
-  <div class="card mb-6 p-4 rounded shadow">
-    <h2 class="text-lg font-semibold mb-2">Backup e Restauração</h2>
-    <div class="flex gap-3">
-      <button id="btn-backup" class="button-primary">Fazer Backup</button>
-      <button id="btn-restore" class="button-danger">Restaurar Backup</button>
+    <!-- Mobile Menu -->
+    <div
+      id="mobile-menu"
+      class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4"
+    >
+      <a
+        href="#"
+        onclick="navigateTo('dashboard.html'); return false;"
+        class="text-gray-300"
+        >Dashboard</a
+      >
+      <a
+        href="#"
+        onclick="navigateTo('contas.html'); return false;"
+        class="text-gray-300"
+        >Contas</a
+      >
+      <a
+        href="#"
+        onclick="navigateTo('transacoes.html'); return false;"
+        class="text-gray-300"
+        >Transações</a
+      >
+      <a
+        href="#"
+        onclick="navigateTo('relatorios.html'); return false;"
+        class="text-gray-300"
+        >Relatórios</a
+      >
+      <a
+        href="#"
+        onclick="navigateTo('configuracoes.html'); return false;"
+        class="text-gray-300 font-bold"
+        >Configurações</a
+      >
     </div>
-    <p class="mt-3 text-sm text-gray-600">
-      O backup salva uma cópia do arquivo de banco de dados em /backups com a data/hora no nome.
-    </p>
-  </div>
 
-  <!-- Sobre o Sistema -->
-  <div class="card p-4 rounded shadow">
-    <h2 class="text-lg font-semibold mb-2">Sobre o Sistema</h2>
-    <p>ProFinance v1.0</p>
-    <p>Desenvolvido por Ricardo Goulart</p>
-  </div>
-</main>
+    <main class="container mx-auto p-6">
+      <h1 class="text-2xl font-bold mb-6">Configurações do Sistema</h1>
 
-</body>
+      <!-- Preferências -->
+      <div class="card mb-6 p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-2">Preferências</h2>
+        <label class="flex items-center gap-2">
+          <input type="checkbox" id="toggle-tema" class="form-checkbox" />
+          <span>Tema Escuro</span>
+        </label>
+      </div>
+
+      <!-- Backup e Restauração -->
+      <div class="card mb-6 p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-2">Backup e Restauração</h2>
+        <div class="flex gap-3">
+          <button id="btn-backup" class="button-primary">Fazer Backup</button>
+          <button id="btn-restore" class="button-danger">
+            Restaurar Backup
+          </button>
+        </div>
+        <p class="mt-3 text-sm text-gray-600">
+          O backup salva uma cópia do arquivo de banco de dados com data/hora no
+          nome.
+        </p>
+      </div>
+
+      <!-- Sobre o Sistema -->
+      <div class="card p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-2">Sobre o Sistema</h2>
+        <p>ProFinance v1.0</p>
+        <p>Desenvolvido por Ricardo Goulart</p>
+      </div>
+    </main>
+  </body>
 </html>

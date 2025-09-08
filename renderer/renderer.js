@@ -61,6 +61,27 @@ function formatBRL(valor) {
   const dec = new Decimal(valor || 0);
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(dec.toFixed(2));
 }
+// =================== Helper Data ===================
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  
+  // Se vier no formato YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [ano, mes, dia] = dateStr.split("-");
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  // Caso contrário, tenta parse normal (ISO, DateTime etc.)
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+
+  const dia = String(d.getDate()).padStart(2, "0");
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const ano = d.getFullYear();
+  return `${dia}/${mes}/${ano}`;
+}
+
+
 
 // =================== DASHBOARD ===================
 async function carregarDashboard() {
@@ -98,7 +119,7 @@ async function carregarDashboard() {
       const valorText = `${isCredito ? "" : "-"}${formatBRL(m.valor)}`;
       return `
         <tr>
-          <td>${m.data || ""}</td>
+          <td>${formatDate(m.data)}</td>
           <td>${m.conta_nome || ""}</td>
           <td>${m.titulo || ""}</td>
           <td class="px-2 py-1 ${bgClass} text-white rounded text-center">${tipoLabel}</td>
@@ -113,7 +134,7 @@ async function carregarDashboard() {
 }
 
 function verTransacoes(contaId) {
-  window.location.href = `transacoes.html?conta=${contaId}`;
+  navigateTo(`transacoes.html?conta=${contaId}`);
 }
 
 // =================== CONTAS ===================
@@ -280,7 +301,7 @@ async function carregarTransacoes() {
       const valorText = `${isCredito ? "" : "-"}${formatBRL(t.valor)}`;
       return `
         <tr>
-          <td>${t.data || ''}</td>
+          <td>${formatDate(t.data)}</td>
           <td>${t.conta_nome || ''}</td>
           <td>${t.titulo || ''}</td>
           <td class="px-2 py-1 ${bgClass} text-white rounded text-center">${tipoLabel}</td>
@@ -472,17 +493,22 @@ function atualizarExtrato() {
   if (!tbody) return;
 
   tbody.innerHTML = relatorioTransacoes.map(t => {
-    const valorText = (t.tipo === "debito" ? "-" : "") + formatBRL(t.valor);
-    return `
-      <tr>
-        <td>${t.data || ""}</td>
-        <td>${t.conta_nome || ""}</td>
-        <td>${t.titulo || ""}</td>
-        <td>${t.tipo === "credito" ? "Crédito" : "Débito"}</td>
-        <td class="text-right font-semibold">${valorText}</td>
-      </tr>
-    `;
-  }).join("");
+  const valorText = (t.tipo === "debito" ? "-" : "") + formatBRL(t.valor);
+  const isCredito = t.tipo === "credito";
+  const bgClass = isCredito ? "bg-green-600" : "bg-red-600";
+  const tipoLabel = isCredito ? "Crédito" : "Débito";
+
+  return `
+    <tr>
+      <td>${formatDate(t.data)}</td>
+      <td>${t.conta_nome || ""}</td>
+      <td>${t.titulo || ""}</td>
+      <td class="px-2 py-1 ${bgClass} text-white rounded text-center">${tipoLabel}</td>
+      <td class="text-right font-semibold">${valorText}</td>
+    </tr>
+  `;
+}).join("");
+
 
   // Totais rodapé
   const totalCreditos = relatorioTransacoes
@@ -509,40 +535,63 @@ function atualizarGraficos() {
   const ctx2 = document.getElementById("grafico-saldo").getContext("2d");
 
   const datas = [...new Set(relatorioTransacoes.map(t => t.data))].sort();
-  const entradas = datas.map(d => relatorioTransacoes
-    .filter(t => t.data === d && t.tipo === "credito")
-    .reduce((acc, t) => acc.plus(new Decimal(t.valor)), new Decimal(0)).toNumber()
+
+  // Entradas e saídas calculadas em Decimal
+  const entradas = datas.map(d =>
+    relatorioTransacoes
+      .filter(t => t.data === d && t.tipo === "credito")
+      .reduce((acc, t) => acc.plus(new Decimal(t.valor)), new Decimal(0))
   );
-  const saidas = datas.map(d => relatorioTransacoes
-    .filter(t => t.data === d && t.tipo === "debito")
-    .reduce((acc, t) => acc.plus(new Decimal(t.valor)), new Decimal(0)).toNumber()
+
+  const saidas = datas.map(d =>
+    relatorioTransacoes
+      .filter(t => t.data === d && t.tipo === "debito")
+      .reduce((acc, t) => acc.plus(new Decimal(t.valor)), new Decimal(0))
   );
-  const saldoAcumulado = datas.map((d, i) => {
-    const prev = i > 0 ? saldoAcumulado[i-1] : 0;
-    return prev + entradas[i] - saidas[i];
+
+  // Saldo acumulado em Decimal
+  let saldoAcumulado = [];
+  datas.forEach((d, i) => {
+    const prev = i > 0 ? saldoAcumulado[i - 1] : new Decimal(0);
+    saldoAcumulado.push(prev.plus(entradas[i]).minus(saidas[i]));
   });
 
+  // Se já existirem gráficos, destrói antes de recriar
   if (graficoEntradasSaidas) graficoEntradasSaidas.destroy();
   if (graficoSaldo) graficoSaldo.destroy();
 
+  // Gráfico de entradas/saídas
   graficoEntradasSaidas = new Chart(ctx1, {
     type: "bar",
     data: {
       labels: datas,
       datasets: [
-        { label: "Créditos", data: entradas, backgroundColor: "#10B981" },
-        { label: "Débitos", data: saidas, backgroundColor: "#EF4444" }
+        { label: "Créditos", data: entradas.map(v => v.toNumber()), backgroundColor: "#10B981" },
+        { label: "Débitos", data: saidas.map(v => v.toNumber()), backgroundColor: "#EF4444" }
       ]
     },
     options: { responsive: true, plugins: { legend: { position: "top" } } }
   });
 
+  // Gráfico de saldo acumulado
   graficoSaldo = new Chart(ctx2, {
     type: "line",
-    data: { labels: datas, datasets: [{ label: "Saldo Acumulado", data: saldoAcumulado, borderColor: "#3B82F6", backgroundColor: "#3B82F6", fill: false }] },
+    data: {
+      labels: datas,
+      datasets: [
+        {
+          label: "Saldo Acumulado",
+          data: saldoAcumulado.map(v => v.toNumber()), // só converte aqui
+          borderColor: "#3B82F6",
+          backgroundColor: "#3B82F6",
+          fill: false
+        }
+      ]
+    },
     options: { responsive: true, plugins: { legend: { position: "top" } } }
   });
 }
+
 
 // =================== EXPORTAÇÃO ===================
 async function exportarRelatorioPDF() {
@@ -635,31 +684,46 @@ document.getElementById("btn-export-csv")?.addEventListener("click", () => {
 // =================== BACKUP E RESTAURAÇÃO ===================
 document.getElementById("btn-backup")?.addEventListener("click", async () => {
   try {
-    const backupPath = await window.profinanceAPI.fazerBackup();
-    showToast(`Backup realizado com sucesso! Arquivo: ${backupPath}`, "success");
+    const backupResult = await window.profinanceAPI.fazerBackup();
+
+    if (!backupResult) {
+      showToast("Backup cancelado pelo usuário", "warning");
+      return;
+    }
+
+    showToast(
+      `Backup realizado com sucesso! Arquivo: ${backupResult.fileName}`,
+      "success"
+    );
   } catch (err) {
     console.error(err);
     showToast("Erro ao realizar backup", "error");
   }
 });
 
+// =================== RESTAURAÇÃO ===================
 document.getElementById("btn-restore")?.addEventListener("click", async () => {
-  if (!confirm("Deseja realmente restaurar o backup? Isso substituirá o banco atual.")) return;
   try {
-    const restored = await window.profinanceAPI.restaurarBackup();
-    if (restored) {
-      showToast("Backup restaurado com sucesso!", "success");
-      await atualizarCacheContas();
-      await carregarDashboard();
-      await carregarTransacoes();
-    } else {
-      showToast("Restauração cancelada ou não concluída.", "info");
+    const restoreResult = await window.profinanceAPI.restaurarBackup();
+
+    if (!restoreResult) {
+      showToast("Restauração cancelada pelo usuário", "warning");
+      return;
     }
+
+    showToast(
+      `Restauração realizada com sucesso! Arquivo: ${restoreResult.fileName}`,
+      "success"
+    );
+
+    // Opcional: recarregar interface após restauração
+    // location.reload();
   } catch (err) {
     console.error(err);
     showToast("Erro ao restaurar backup", "error");
   }
 });
+
 
 
 
@@ -675,6 +739,32 @@ document.getElementById("btn-limpar")?.addEventListener("click", () => {
 
 // Inicialização
 document.addEventListener("DOMContentLoaded", async () => {
-  await carregarContasRelatorio();
-  await carregarRelatorio();
+  if (document.getElementById("cards-contas")) {
+    await atualizarCacheContas();
+    await carregarDashboard();
+  }
+  if (document.getElementById("tabela-transacoes")) {
+    await carregarContasTransacoes();
+    await carregarTransacoes();
+  }
+  if (document.getElementById("form-relatorio")) {
+    await carregarContasRelatorio();
+    await carregarRelatorio();
+  }
 });
+// =================== NAVEGAÇÃO COM ANIMAÇÃO ===================
+function navigateTo(url) {
+  const app = document.getElementById('app');
+  if (!app) {
+    window.location.href = url;
+    return;
+  }
+
+  // aplica fade-out
+  app.classList.add('fade-out');
+
+  // depois da transição, muda a página
+  setTimeout(() => {
+    window.location.href = url;
+  }, 300); // mesmo tempo da transição CSS
+}

@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.3.1/decimal.min.js"></script>
   <script src="./renderer.js" defer></script>
 </head>
-<body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
+<body id="app" class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
 
 <!-- Navbar -->
 <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
@@ -16,11 +16,11 @@
     <img src="assets/profinance.svg" alt="ProFinance" />
   </div>
   <div class="hidden md:flex space-x-6">
-    <a href="dashboard.html" class="text-gray-300 hover:text-white">Dashboard</a>
-    <a href="contas.html" class="text-gray-300 hover:text-white">Contas</a>
-    <a href="transacoes.html" class="text-gray-300 hover:text-white font-bold">Transações</a>
-    <a href="relatorios.html" class="text-gray-300 hover:text-white">Relatórios</a>
-    <a href="configuracoes.html" class="text-gray-300 hover:text-white">Configurações</a>
+    <a href="#" onclick="navigateTo('dashboard.html'); return false;" class="text-gray-300 hover:text-white">Dashboard</a>
+    <a href="#" onclick="navigateTo('contas.html'); return false;" class="text-gray-300 hover:text-white font-bold">Contas</a>
+    <a href="#" onclick="navigateTo('transacoes.html'); return false;" class="text-gray-300 hover:text-white">Transações</a>
+    <a href="#" onclick="navigateTo('relatorios.html'); return false;" class="text-gray-300 hover:text-white">Relatórios</a>
+    <a href="#" onclick="navigateTo('configuracoes.html'); return false;" class="text-gray-300 hover:text-white">Configurações</a>
   </div>
   <div class="md:hidden">
     <button id="menu-btn" class="text-white focus:outline-none">
@@ -31,14 +31,15 @@
   </div>
 </nav>
 
-<!-- Mobile menu -->
+<!-- Mobile Menu -->
 <div id="mobile-menu" class="hidden bg-gray-800 md:hidden flex flex-col space-y-3 p-4">
-  <a href="dashboard.html" class="text-gray-300 hover:text-white">Dashboard</a>
-  <a href="contas.html" class="text-gray-300 hover:text-white">Contas</a>
-  <a href="transacoes.html" class="text-gray-300 hover:text-white font-bold">Transações</a>
-  <a href="relatorios.html" class="text-gray-300 hover:text-white">Relatórios</a>
-  <a href="configuracoes.html" class="text-gray-300 hover:text-white">Configurações</a>
+  <a href="#" onclick="navigateTo('dashboard.html'); return false;" class="text-gray-300 font-bold">Dashboard</a>
+  <a href="#" onclick="navigateTo('contas.html'); return false;" class="text-gray-300">Contas</a>
+  <a href="#" onclick="navigateTo('transacoes.html'); return false;" class="text-gray-300">Transações</a>
+  <a href="#" onclick="navigateTo('relatorios.html'); return false;" class="text-gray-300">Relatórios</a>
+  <a href="#" onclick="navigateTo('configuracoes.html'); return false;" class="text-gray-300">Configurações</a>
 </div>
+
 
 <main class="container mx-auto p-6">
   <h1 class="text-2xl font-bold mb-6">Cadastro de Transações</h1>
