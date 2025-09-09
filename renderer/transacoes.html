@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/decimal.js@10.3.1/decimal.min.js"></script>
   <script src="./renderer.js" defer></script>
 </head>
-<body id="app" class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
+<body id="app" class="flex flex-col min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
 
 <!-- Navbar -->
 <nav class="bg-gray-900 dark:bg-gray-800 shadow-lg px-6 py-3 flex items-center justify-between">
@@ -40,51 +40,25 @@
   <a href="#" onclick="navigateTo('configuracoes.html'); return false;" class="text-gray-300">Configurações</a>
 </div>
 
-
-<main class="container mx-auto p-6">
-  <h1 class="text-2xl font-bold mb-6">⇄ Cadastro de Transações</h1>
-
-  <!-- Formulário de Transações -->
-  <div class="card mb-6 p-4 rounded shadow">
-    <form id="form-transacao" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-      <select id="conta" class="border rounded-lg p-2" required></select>
-      <input id="titulo" class="border rounded-lg p-2" type="text" placeholder="Título da Transação" required>
-      <input id="valor" class="border rounded-lg p-2" type="number" step="0.01" placeholder="Valor" required>
-      <select id="tipo" class="border rounded-lg p-2" required>
-        <option value="">Tipo</option>
-        <option value="credito">Crédito</option>
-        <option value="debito">Débito</option>
-      </select>
-      <input id="data" class="border rounded-lg p-2" type="date" required>
-      <button class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg col-span-full mt-2">Salvar Transação</button>
-    </form>
-  </div>
-
-  <!-- Filtros -->
-  <div class="card mb-6 p-4 rounded shadow">
-    <h2 class="text-lg font-semibold mb-3">Filtros</h2>
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-      <select id="filter-tipo" class="border rounded-lg p-2">
-        <option value="">Todos os Tipos</option>
-        <option value="credito">Crédito</option>
-        <option value="debito">Débito</option>
-      </select>
-      <select id="sort-date" class="border rounded-lg p-2">
-        <option value="desc">Mais Recentes</option>
-        <option value="asc">Mais Antigos</option>
-      </select>
-      <input id="min-value" type="number" step="0.01" placeholder="Valor Mínimo" class="border rounded-lg p-2">
-      <input id="max-value" type="number" step="0.01" placeholder="Valor Máximo" class="border rounded-lg p-2">
-      <div class="flex gap-2">
-        <button id="apply-filters" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg w-full">Aplicar</button>
-        <button id="clear-filters" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg w-full">Limpar</button>
-      </div>
-    </div>
-  </div>
+<main class="container mx-auto p-6 flex-grow">
+  <h1 class="text-2xl font-bold mb-6">⇄ Transações</h1>
 
   <!-- Lista de Transações -->
   <div class="card p-4 rounded shadow">
-    <h2 class="text-lg font-semibold mb-4">Transações Cadastradas</h2>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold">Transações Cadastradas</h2>
+      <div class="flex gap-2">
+        <button id="btn-filtros" 
+          class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow">
+          Filtros
+        </button>
+        <button onclick="abrirModalNovaTransacao()" 
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">
+          Nova Transação
+        </button>
+      </div>
+    </div>
+
     <div class="overflow-x-auto">
       <table class="table w-full">
         <thead>
@@ -98,12 +72,39 @@
           </tr>
         </thead>
         <tbody id="tabela-transacoes">
-          <tr><td colspan="6" class="text-center text-gray-500">Nenhuma transação cadastrada.</td></tr>
+          <tr><td colspan="6" class="text-center text-gray-500">Selecione a conta nos filtros antes de carregar</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </main>
+
+<!-- Modal Nova Transação -->
+<div id="modal-nova-transacao" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg">
+    <h2 class="text-xl font-semibold mb-4">Adicionar Nova Transação</h2>
+    <form id="form-transacao" class="grid grid-cols-1 gap-4">
+      <!-- Select de Contas -->
+      <select id="conta" class="border rounded-lg p-2" required>
+        <option value="">Selecione a Conta</option>
+        <!-- Opções carregadas dinamicamente -->
+      </select>
+
+      <input id="titulo" class="border rounded-lg p-2" type="text" placeholder="Título da Transação" required>
+      <input id="valor" class="border rounded-lg p-2" type="number" step="0.01" placeholder="Valor" required>
+      <select id="tipo" class="border rounded-lg p-2" required>
+        <option value="">Tipo</option>
+        <option value="credito">Crédito</option>
+        <option value="debito">Débito</option>
+      </select>
+      <input id="data" class="border rounded-lg p-2" type="date" required>
+      <div class="flex justify-end gap-2 pt-4">
+        <button type="button" onclick="fecharModalNovaTransacao()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg">Fechar</button>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">Salvar Transação</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- Modal Editar Transação -->
 <div id="modal-transacao" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -125,6 +126,46 @@
     </form>
   </div>
 </div>
+
+<!-- Modal Filtros -->
+<div id="modal-filtros" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg">
+    <h2 class="text-xl font-semibold mb-4">Filtros de Transações</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Select de contas -->
+      <select id="filter-conta" class="border rounded-lg p-2">
+        <option value="">Selecione a Conta</option>
+      </select>
+      <select id="filter-tipo" class="border rounded-lg p-2">
+        <option value="">Todos os Tipos</option>
+        <option value="credito">Crédito</option>
+        <option value="debito">Débito</option>
+      </select>
+      <select id="sort-date" class="border rounded-lg p-2">
+        <option value="desc">Mais Recentes</option>
+        <option value="asc">Mais Antigos</option>
+      </select>
+      <input id="min-value" type="number" step="0.01" placeholder="Valor Mínimo" class="border rounded-lg p-2">
+      <input id="max-value" type="number" step="0.01" placeholder="Valor Máximo" class="border rounded-lg p-2">
+    </div>
+    <div class="flex justify-end gap-2 pt-4">
+      <button id="apply-filters" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">Aplicar</button>
+      <button id="clear-filters" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg">Limpar</button>
+      <button onclick="fecharModalFiltros()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-gray-900 dark:bg-gray-800 text-gray-300 py-4 text-center border-t border-gray-700">
+  <p class="text-sm">&copy; 2025 ProFinance. Todos os direitos reservados.</p>
+  <p class="text-xs mt-1">
+    Desenvolvido por 
+    <a href="https://github.com/jricardogoulart" target="_blank" class="hover:underline text-blue-400">
+      José Ricardo Goulart
+    </a>
+  </p>
+</footer>
 
 </body>
 </html>

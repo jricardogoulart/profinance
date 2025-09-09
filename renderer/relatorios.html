@@ -43,29 +43,8 @@
   <a href="#" onclick="navigateTo('configuracoes.html'); return false;" class="text-gray-300">Configurações</a>
 </div>
 
-
 <main class="container mx-auto p-6">
   <h1 class="text-2xl font-bold mb-6">📊 Relatórios Financeiros</h1>
-
-  <!-- Filtros -->
-  <div class="card mb-6 p-4 rounded shadow">
-    <form id="form-relatorio" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-      <select id="filtro-conta" class="border rounded-lg p-2">
-        <option value="">Todas as Contas</option>
-      </select>
-      <input id="filtro-data-inicio" class="border rounded-lg p-2" type="date" />
-      <input id="filtro-data-fim" class="border rounded-lg p-2" type="date" />
-      <select id="filtro-tipo" class="border rounded-lg p-2">
-        <option value="">Todos os Tipos</option>
-        <option value="credito">Crédito</option>
-        <option value="debito">Débito</option>
-      </select>
-      <div class="flex gap-2">
-        <button id="btn-filtrar" type="submit" class="button-primary w-full">Filtrar</button>
-        <button id="btn-limpar" type="button" class="button-secondary w-full">Limpar</button>
-      </div>
-    </form>
-  </div>
 
   <!-- Resumo -->
   <div class="card p-4 rounded shadow">
@@ -98,15 +77,22 @@
     </div>
   </div>
 
-  <!-- Exportação -->
-  <div class="flex justify-end gap-4 mt-6">
-    <button id="btn-export-pdf" class="button-primary">Exportar PDF</button>
-    <button id="btn-export-csv" class="button-secondary">Exportar CSV</button>
-  </div>
-
   <!-- Extrato Detalhado -->
   <div class="card p-4 rounded shadow mt-6">
-    <h2 class="text-lg font-semibold mb-4">Extrato Detalhado</h2>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold">Extrato Detalhado</h2>
+      <div class="flex gap-2">
+        <button id="btn-filtros-relatorio" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow">
+          Filtros
+        </button>
+        <button id="btn-export-pdf" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">
+          Exportar PDF
+        </button>
+        <button id="btn-export-csv" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow">
+          Exportar CSV
+        </button>
+      </div>
+    </div>
     <div class="overflow-x-auto">
       <table class="table w-full">
         <thead>
@@ -129,7 +115,36 @@
       </table>
     </div>
   </div>
-
 </main>
+
+<!-- Modal Filtros Relatório -->
+<div id="modal-filtros-relatorio" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-2xl">
+    <h2 class="text-xl font-semibold mb-4">Filtros de Relatório</h2>
+    <form id="form-relatorio" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <select id="filtro-conta" class="border rounded-lg p-2">
+        <option value="">Todas as Contas</option>
+      </select>
+      <select id="filtro-tipo" class="border rounded-lg p-2">
+        <option value="">Todos os Tipos</option>
+        <option value="credito">Crédito</option>
+        <option value="debito">Débito</option>
+      </select>
+      <input id="filtro-data-inicio" class="border rounded-lg p-2" type="date" />
+      <input id="filtro-data-fim" class="border rounded-lg p-2" type="date" />
+    </form>
+    <div class="flex justify-end gap-2 pt-4">
+      <button id="btn-filtrar" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">Aplicar</button>
+      <button id="btn-limpar" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg">Limpar</button>
+      <button onclick="fecharModalFiltrosRelatorio()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="mt-12 bg-gray-900 dark:bg-gray-800 text-gray-300 py-4 text-center border-t border-gray-700">
+  <p class="text-sm">&copy; 2025 ProFinance. Todos os direitos reservados.</p>
+  <p class="text-xs mt-1">Desenvolvido por <a href="https://github.com/jricardogoulart" target="_blank" class="hover:underline text-blue-400">José Ricardo Goulart</a></p>
+</footer>
 </body>
 </html>

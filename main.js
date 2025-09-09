@@ -5,6 +5,28 @@ const fs = require("fs");
 const Database = require("better-sqlite3");
 const Decimal = require("decimal.js");
 
+// Shortuts
+const { globalShortcut } = require("electron");
+
+app.whenReady().then(() => {
+  globalShortcut.register("CommandOrControl+R", () => {
+    BrowserWindow.getFocusedWindow()?.reload();
+  });
+
+  globalShortcut.register("CommandOrControl+=", () => {
+    BrowserWindow.getFocusedWindow()?.webContents.setZoomLevel(
+      BrowserWindow.getFocusedWindow().webContents.getZoomLevel() + 0.5
+    );
+  });
+
+  globalShortcut.register("CommandOrControl+-", () => {
+    BrowserWindow.getFocusedWindow()?.webContents.setZoomLevel(
+      BrowserWindow.getFocusedWindow().webContents.getZoomLevel() - 0.5
+    );
+  });
+});
+
+
 const dbPath = path.join(app.getPath('userData'), 'profinance.db');
 let db;
 
@@ -59,8 +81,9 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
     },
+    
   });
-
+  mainWindow.setMenu(null);
   mainWindow.loadFile(path.join(__dirname, "renderer/dashboard.html"));
   mainWindow.on("closed", () => (mainWindow = null));
 }
